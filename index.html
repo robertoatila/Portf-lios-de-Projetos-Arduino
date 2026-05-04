@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portfólio de projetos Arduino com códigos práticos e educativos.">
+    <title>Portfólio de Roberto Átila | Arduino & Tecnologia</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="hero">
+        <div class="container">
+            <h1 class="hero-title">Explorando o Mundo do <span class="highlight">Arduino</span></h1>
+            <p class="hero-subtitle">
+                O Arduino é uma plataforma de prototipagem eletrônica de código aberto baseada em hardware e software fáceis de usar. 
+                Ele é a ponte perfeita entre a imaginação e a realidade, permitindo que criadores, estudantes e profissionais desenvolvam 
+                projetos interativos, desde piscar um simples LED até controlar sistemas robóticos complexos.
+            </p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="projects-section">
+            <h2 class="section-title">Meus Códigos</h2>
+            <div class="projects-grid" id="projects-grid">
+                <!-- Cards renderizados via JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Meu Portfólio Arduino. Desenvolvido com paixão e código.</p>
+            <div class="social-links">
+                <a href="https://github.com/robertoatila" target="_blank">GitHub</a>
+                <a href="https://www.linkedin.com/in/roberto-%C3%A1tila-almeida-azevedo-0a64412b4/" target="_blank">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal para visualização do código -->
+    <div class="modal-overlay" id="code-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Nome do Projeto</h3>
+                <button class="close-btn" id="close-modal" aria-label="Fechar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <pre><code id="modal-code"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
