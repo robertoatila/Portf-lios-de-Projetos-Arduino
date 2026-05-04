@@ -2,6 +2,10 @@ const projectsData = [
     {
         id: "piscante",
         title: "PISCANTE.ino",
+        difficulty: "Iniciante",
+        difficultyLevel: 1,
+        components: ["1× Arduino Uno", "4× LEDs", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Saídas digitais", "Temporização", "Função delay()"],
         description: "O clássico 'Blink'. Uma introdução perfeita às saídas digitais, ensinando o microcontrolador a ligar e desligar um componente no seu próprio ritmo.",
         code: `int led1 = A1;
 int led2 = A2;
@@ -48,6 +52,10 @@ void loop() {
     {
         id: "for",
         title: "FOR.ino",
+        difficulty: "Iniciante",
+        difficultyLevel: 1,
+        components: ["1× Arduino Uno", "4× LEDs", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Laços for", "Arrays", "Lógica condicional"],
         description: "Uso de laços de repetição 'for' para controlar múltiplos componentes de forma eficiente. Excelente para criar sequências de LEDs.",
         code: `int led[] = {A1, A2, A3, A4};
 void setup() {
@@ -74,6 +82,10 @@ void loop() {
     {
         id: "semaforo",
         title: "SEMAFORODOLA_ANHA.ino",
+        difficulty: "Iniciante",
+        difficultyLevel: 1,
+        components: ["1× Arduino Uno", "4× LEDs (vermelho, amarelo, verde)", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Máquina de estados", "Temporização sequencial", "Simulação de semáforo"],
         description: "Lógica de controle de tempo simulando um cruzamento de trânsito. Um mergulho na temporização e coordenação de atuadores.",
         code: `int led1 = A1;
 int led2 = A2;
@@ -120,6 +132,10 @@ void loop() {
     {
         id: "mario",
         title: "MARIO.ino",
+        difficulty: "Intermediário",
+        difficultyLevel: 2,
+        components: ["1× Arduino Uno", "1× Buzzer piezoelétrico", "4× LEDs", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Geração de áudio", "Função tone()", "Arrays de melodia", "Sincronização LED-som"],
         description: "A magia da geração de áudio! Reprodução do inesquecível tema do Super Mario Bros controlando as frequências em um buzzer piezoelétrico.",
         code: `#define buzzer 3
 #define led1 A1
@@ -338,6 +354,10 @@ void loop() {
     {
         id: "marcha_imperial",
         title: "marchaImperial.ino",
+        difficulty: "Intermediário",
+        difficultyLevel: 2,
+        components: ["1× Arduino Uno", "1× Buzzer piezoelétrico", "4× LEDs", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Geração de áudio", "Temporização musical", "Controle de LEDs sincronizado"],
         description: "O poder do Lado Sombrio da Força. A icônica Marcha Imperial (Star Wars) tocada no buzzer, sincronizada com LEDs simulando sabres de luz.",
         code: `#define buzzer 3
 #define led1 A1
@@ -464,6 +484,10 @@ void loop() {
     {
         id: "got",
         title: "gameofthrones.ino",
+        difficulty: "Intermediário",
+        difficultyLevel: 2,
+        components: ["1× Arduino Uno", "1× Buzzer piezoelétrico", "4× LEDs", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Geração de áudio", "Notas graves", "Efeitos visuais dramáticos"],
         description: "O inverno chegou. O tema épico de Game of Thrones transcrito para Arduino, usando notas mais graves no buzzer e um balé de LEDs dramáticos.",
         code: `#define buzzer 3
 #define led1 A1
@@ -600,6 +624,10 @@ void loop() {
     {
         id: "apac",
         title: "APAC.ino",
+        difficulty: "Intermediário",
+        difficultyLevel: 2,
+        components: ["1× Arduino Uno", "4× LEDs", "4× Resistores 220Ω", "1× Protoboard"],
+        concepts: ["Controle sequencial", "Temporização", "Coordenação de atuadores"],
         description: "Um projeto avançado de integração e controle. Este código consolida leituras de sensores e acionamento de múltiplos relés para um sistema autônomo completo.",
         code: `int led1 = A1;
 int led2 = A2;
@@ -646,6 +674,10 @@ void loop() {
     {
         id: "carrinho",
         title: "CARRINHO.ino",
+        difficulty: "Avançado",
+        difficultyLevel: 3,
+        components: ["1× Arduino Uno", "2× Motores DC", "1× Ponte H (L298N)", "2× Sensores infravermelhos", "1× Chassi robótico"],
+        concepts: ["Robótica móvel", "Leitura de sensores", "Lógica de navegação", "Controle de motores"],
         description: "Lógica de controle para um robô móvel autônomo. O código gerencia motores DC e sensores para navegação e desvio de obstáculos em tempo real.",
         code: `int e,d;
 void setup()
@@ -695,6 +727,10 @@ void loop()
     {
         id: "cozinha_inteligente",
         title: "COZINHA_INTELIGENTE.ino",
+        difficulty: "Avançado",
+        difficultyLevel: 3,
+        components: ["1× Arduino Uno", "1× Sensor ultrassônico HC-SR04", "1× Sensor PIR", "1× Sensor de gás MQ-2", "1× Sensor de temperatura", "1× Servo motor", "2× LEDs", "1× Buzzer"],
+        concepts: ["Automação residencial", "Múltiplos sensores", "Servo motor", "Comunicação serial", "Biblioteca Servo.h"],
         description: "Sistema completo de automação para cozinha inteligente. Integra controle de armários via ultrassônico, detecção de gás, temperatura e iluminação automática por presença.",
         code: `#include <Servo.h>
 
