@@ -1,700 +1,629 @@
-/**
- * Portfólio Arduino - Script Principal
- * Arquitetura Vanilla JS (ES6+) baseada em módulos lógicos (IIFEs e Closures)
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-    // ════════════════════════════════════════════════
-    // 1. UTILITÁRIOS E ESTADO GLOBAL
-    // ════════════════════════════════════════════════
-    
-    // Utilitário de formatação de código Arduino C++
-    const highlightCode = (code) => {
-        let escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        
-        const tokens = [];
-        let tokenIndex = 0;
-        
-        const protect = (match, type) => {
-            const placeholder = `__TOKEN_${tokenIndex}__`;
-            tokens.push({ placeholder, text: `<span class="${type}">${match}</span>` });
-            tokenIndex++;
-            return placeholder;
-        };
+    'use strict';
 
-        // Strings e comentários primeiro (protegidos)
-        escaped = escaped.replace(/("[^"]*")/g, m => protect(m, 'token-string'));
-        escaped = escaped.replace(/(\/\/.*$)/gm, m => protect(m, 'token-comment'));
-        escaped = escaped.replace(/(\/\*[\s\S]*?\*\/)/g, m => protect(m, 'token-comment'));
-        
-        // Diretivas do pre-processador (#include, #define)
-        escaped = escaped.replace(/^(#\w+.*)$/gm, m => protect(m, 'token-directive'));
-        
-        // Palavras-chave
-        const keywords = ['void', 'int', 'float', 'bool', 'char', 'long', 'if', 'else', 'for', 'while', 'return', 'const'];
-        const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
-        escaped = escaped.replace(keywordRegex, '<span class="token-keyword">$1</span>');
-        
-        // Constantes do Arduino
-        const constants = ['HIGH', 'LOW', 'INPUT', 'OUTPUT', 'INPUT_PULLUP', 'true', 'false'];
-        const constRegex = new RegExp(`\\b(${constants.join('|')})\\b`, 'g');
-        escaped = escaped.replace(constRegex, '<span class="token-keyword">$1</span>');
-        
-        // Funções do Arduino (pinMode, digitalWrite, etc)
-        const functions = ['setup', 'loop', 'pinMode', 'digitalWrite', 'digitalRead', 'analogRead', 'analogWrite', 'delay', 'Serial', 'begin', 'print', 'println', 'tone', 'noTone', 'pulseIn'];
-        const funcRegex = new RegExp(`\\b(${functions.join('|')})(?=\\s*\\()`, 'g');
-        escaped = escaped.replace(funcRegex, '<span class="token-function">$1</span>');
-        
-        // Números
-        escaped = escaped.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="token-number">$1</span>');
-        
-        // Restaurar tokens protegidos
-        tokens.forEach(t => {
-            escaped = escaped.replace(t.placeholder, t.text);
-        });
-        
-        return escaped;
+    // Utilitários de Performance e Acessibilidade
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Syntax Highlight C++
+    const highlightSyntax = (code) => {
+        if (!code) return '';
+        return code
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/(\/\/.+)/g, '<span class="token-comment">$1</span>')
+            .replace(/\b(int|void|const|char|float|bool|long|String)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/\b(HIGH|LOW|OUTPUT|INPUT|INPUT_PULLUP|true|false)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/\b(digitalWrite|digitalRead|pinMode|delay|setup|loop|analogRead|analogWrite|Serial|begin|print|println|tone|noTone|pulseIn)\b/g, '<span class="token-function">$1</span>')
+            .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
     };
 
-    // ════════════════════════════════════════════════
-    // 2. SISTEMA DE LOADING (BOOT SCREEN)
-    // ════════════════════════════════════════════════
-    const initLoadingScreen = () => {
-        const loadingScreen = document.getElementById('boot-screen');
-        const lines = document.querySelectorAll('.loading-lines .line');
-        const progressBar = document.getElementById('loading-bar');
+    // 1. BOOT SCREEN & TYPEWRITER
+    const initBootAndTypewriter = () => {
+        const bootScreen = document.getElementById('boot-screen');
+        const bootLines = document.getElementById('boot-lines');
+        const bootBar = document.getElementById('boot-bar');
+        const bootPct = document.getElementById('boot-pct');
+        const typeText = document.getElementById('typewriter-text');
+        const subtitle = document.getElementById('hero-subtitle');
+
+        let typewriterStarted = false;
         
-        if (!loadingScreen) return;
-        
-        // Animação das linhas do terminal
-        lines.forEach(line => {
-            const delay = parseInt(line.getAttribute('data-delay') || '0');
-            setTimeout(() => {
-                line.classList.add('show');
-            }, delay);
-        });
-        
-        // Barra de progresso (aumenta o delay para simular um processo mais longo e visível)
-        setTimeout(() => {
-            if(progressBar) progressBar.style.width = '100%';
-        }, 300);
-        
-        // Ocultar overlay após a sequência (aproximadamente 2s a 2.5s)
-        setTimeout(() => {
-            loadingScreen.classList.add('done');
-            document.body.style.overflow = 'auto'; // Reativar scroll
+        const startTypewriter = () => {
+            if (typewriterStarted || !typeText) return;
+            typewriterStarted = true;
             
-            // Iniciar animações iniciais de scroll reveal
-            setTimeout(() => {
-                const reveals = document.querySelectorAll('[data-reveal]');
-                reveals.forEach(el => {
-                    const rect = el.getBoundingClientRect();
-                    if (rect.top < window.innerHeight) {
-                        el.classList.add('visible');
-                    }
-                });
-            }, 300);
+            const text = "A imaginação ganha vida com código.";
+            let i = 0;
             
-        }, 2200);
-    };
-
-    // Bloquear scroll durante o loading
-    document.body.style.overflow = 'hidden';
-    initLoadingScreen();
-
-    // ════════════════════════════════════════════════
-    // 3. CURSOR CUSTOMIZADO
-    // ════════════════════════════════════════════════
-    // A lógica do cursor foi extraída para 'cursor.js' para manter o princípio DRY.
-
-    // ════════════════════════════════════════════════
-    // 4. RENDERIZAÇÃO DOS PROJETOS
-    // ════════════════════════════════════════════════
-    const renderProjects = () => {
-        const grid = document.getElementById('projects-grid');
-        if (!grid || typeof projectsData === 'undefined') return;
-
-        grid.innerHTML = projectsData.map((project, index) => {
-            const indexStr = String(index + 1).padStart(2, '0');
-            const delay = (index % 3) * 100;
-            
-            // Usando conceitos em vez de componentes para a tag principal do card se disponíveis
-            const conceptsHtml = (project.concepts || project.components.slice(0,3)).map(concept => 
-                `<span class="concept-tag">${concept}</span>`
-            ).join('');
-
-            return `
-                <article class="card" data-reveal="scale" style="--reveal-delay: ${delay}ms">
-                    <span class="project-number">${indexStr}</span>
-                    <div class="card-header">
-                        <h3 class="card-title">${project.title}</h3>
-                    </div>
-                    <div class="card-concepts">${conceptsHtml}</div>
-                    <p class="card-desc">${project.description}</p>
-                    <button class="card-btn view-code-btn" data-id="${project.id}" aria-label="Visualizar código do projeto ${project.title}">
-                        Ver Código-fonte
-                    </button>
-                </article>
-            `;
-        }).join('');
-    };
-    renderProjects();
-
-    // ════════════════════════════════════════════════
-    // 5. SISTEMA MODAL
-    // ════════════════════════════════════════════════
-    const initModal = () => {
-        const modal = document.getElementById('code-modal');
-        const closeBtn = document.getElementById('close-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalCode = document.getElementById('modal-code');
-        const modalDifficulty = document.getElementById('modal-difficulty');
-        const modalComponents = document.getElementById('modal-components');
-        const copyBtn = document.getElementById('copy-code-btn');
-        const copyBtnText = document.getElementById('copy-btn-text');
-        
-        let currentCode = '';
-
-        if (!modal) return;
-
-        const openModal = (projectId) => {
-            const project = projectsData.find(p => p.id === projectId);
-            if (!project) return;
-
-            currentCode = project.code;
-            modalTitle.textContent = project.title;
-            modalCode.innerHTML = highlightCode(project.code);
-            
-            // Setup meta data
-            modalDifficulty.textContent = project.difficulty === 1 ? 'Iniciante' : project.difficulty === 2 ? 'Intermediário' : 'Avançado';
-            modalDifficulty.setAttribute('data-level', project.difficulty);
-            
-            modalComponents.innerHTML = project.components.map(comp => `<li>${comp}</li>`).join('');
-
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // block scroll
-            
-            // Reset copy button
-            copyBtn.classList.remove('copied');
-            copyBtnText.textContent = 'Copiar';
-        };
-
-        const closeModal = () => {
-            modal.classList.remove('active');
-            document.body.style.overflow = ''; // restore scroll
-        };
-
-        // Event Listeners
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.view-code-btn')) {
-                const btn = e.target.closest('.view-code-btn');
-                openModal(btn.getAttribute('data-id'));
+            if (subtitle) {
+                subtitle.style.opacity = '0';
+                subtitle.style.transition = 'opacity 1s ease';
             }
-        });
+            
+            const type = () => {
+                if (i < text.length) {
+                    typeText.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, Math.random() * 50 + 50);
+                } else {
+                    if (subtitle) subtitle.style.opacity = '1';
+                }
+            };
+            type();
+        };
 
-        closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
-        });
+        if (bootScreen && bootLines && bootBar && bootPct) {
+            const messages = [
+                "> SYSTEM BOOT...",
+                "> LOADING KERNEL...",
+                "> MOUNTING VFS...",
+                "> STARTING SERVICES...",
+                "> BOOT COMPLETE."
+            ];
+            
+            let progress = 0;
+            let msgIndex = 0;
+            
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress >= 100) progress = 100;
+                
+                bootPct.textContent = `${progress}%`;
+                bootBar.style.setProperty('--progress', `${progress}%`);
+                
+                if (progress % 25 === 0 && msgIndex < messages.length) {
+                    bootLines.textContent = messages[msgIndex];
+                    msgIndex++;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    bootLines.textContent = messages[messages.length - 1];
+                    setTimeout(() => {
+                        bootScreen.style.opacity = '0';
+                        bootScreen.style.visibility = 'hidden';
+                        bootScreen.addEventListener('transitionend', () => {
+                            bootScreen.style.display = 'none';
+                            startTypewriter();
+                        }, { once: true });
+                    }, 500);
+                }
+            }, 100);
 
-        // Copiar código
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(currentCode).then(() => {
-                copyBtn.classList.add('copied');
-                copyBtnText.textContent = 'Copiado!';
-                setTimeout(() => {
-                    copyBtn.classList.remove('copied');
-                    copyBtnText.textContent = 'Copiar';
-                }, 2000);
-            });
-        });
+            // Fallback de segurança
+            setTimeout(() => {
+                if (bootScreen.style.display !== 'none') {
+                    bootScreen.style.display = 'none';
+                    startTypewriter();
+                }
+            }, 2400);
+        } else {
+            startTypewriter();
+        }
     };
-    initModal();
 
-    // ════════════════════════════════════════════════
-    // 6. SCROLL E NAVEGAÇÃO
-    // ════════════════════════════════════════════════
-    const initScrollFeatures = () => {
+    // 2. CUSTOM CURSOR
+    const initCustomCursor = () => {
+        if (prefersReducedMotion || !window.matchMedia('(pointer: fine)').matches) return;
+        
+        const cursor = document.getElementById('cursor');
+        if (!cursor) return;
+        
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let cursorX = mouseX;
+        let cursorY = mouseY;
+        
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        const updateCursor = () => {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+            requestAnimationFrame(updateCursor);
+        };
+        updateCursor();
+        
+        const addCursorHover = () => {
+            const interactables = document.querySelectorAll('a, button, .project-card, .comp-card, .future-card, .board-figure, .step-card, input[type="range"]');
+            interactables.forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+                el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+                el.addEventListener('mousedown', () => cursor.classList.add('clicking'));
+                el.addEventListener('mouseup', () => cursor.classList.remove('clicking'));
+            });
+        };
+        addCursorHover();
+        window.addCursorHover = addCursorHover;
+    };
+
+    // 3. NAVIGATION & SCROLL
+    const initNavigation = () => {
         const nav = document.getElementById('site-nav');
-        const progressBar = document.getElementById('scroll-progress');
+        const menuBtn = document.getElementById('nav-menu-btn');
+        const navLinks = document.getElementById('nav-links');
+        const links = document.querySelectorAll('.nav-link');
+        const progress = document.getElementById('scroll-progress');
         const backToTop = document.getElementById('back-to-top');
-        const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.nav-links .nav-link');
-        const circuitDividers = document.querySelectorAll('.circuit-divider');
-
+        
         window.addEventListener('scroll', () => {
             const scrollY = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
             
-            // Navbar glassmorphism
-            if (scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
+            // Navbar Glassmorphism
+            if (nav) {
+                if (scrollY > 50) nav.classList.add('scrolled');
+                else nav.classList.remove('scrolled');
             }
-
-            // Barra de progresso
-            if (progressBar && docHeight > 0) {
-                const progress = (scrollY / docHeight) * 100;
-                progressBar.style.width = `${progress}%`;
+            
+            // Scroll Progress & Back to Top
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            
+            if (progress && height > 0) {
+                const scrolled = (winScroll / height) * 100;
+                progress.style.width = scrolled + "%";
             }
-
-            // Back to top
+            
             if (backToTop) {
-                if (scrollY > 500) {
-                    backToTop.classList.add('visible');
-                } else {
-                    backToTop.classList.remove('visible');
-                }
+                if (scrollY > 500) backToTop.classList.add('visible');
+                else backToTop.classList.remove('visible');
             }
-
-            // Active links
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (scrollY >= sectionTop - 150) {
-                    current = section.getAttribute('id');
-                }
-            });
-
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === `#${current}`) {
-                    link.classList.add('active');
-                }
+        }, { passive: true });
+        
+        // Mobile Menu
+        if (menuBtn && navLinks) {
+            menuBtn.addEventListener('click', () => {
+                const expanded = menuBtn.getAttribute('aria-expanded') === 'true';
+                menuBtn.setAttribute('aria-expanded', !expanded);
+                navLinks.classList.toggle('active');
             });
             
-            // Desenhar SVG do circuit divider
-            circuitDividers.forEach(divider => {
-                const rect = divider.getBoundingClientRect();
-                if(rect.top < window.innerHeight && rect.bottom > 0) {
-                    divider.classList.add('drawn');
-                }
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    menuBtn.setAttribute('aria-expanded', 'false');
+                });
             });
-        });
-
-        // Voltar ao topo click
+        }
+        
         if (backToTop) {
             backToTop.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
         
-        // Menu mobile
-        const menuBtn = document.getElementById('nav-menu-btn');
-        const navLinksContainer = document.getElementById('nav-links');
-        
-        if (menuBtn && navLinksContainer) {
-            menuBtn.addEventListener('click', () => {
-                const isOpen = navLinksContainer.classList.contains('open');
-                navLinksContainer.classList.toggle('open');
-                menuBtn.setAttribute('aria-expanded', !isOpen);
-                menuBtn.textContent = isOpen ? '☰' : '✕';
-            });
-            
-            // Fechar ao clicar num link
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    navLinksContainer.classList.remove('open');
-                    menuBtn.setAttribute('aria-expanded', 'false');
-                    menuBtn.textContent = '☰';
-                });
-            });
-        }
-    };
-    initScrollFeatures();
-
-    // ════════════════════════════════════════════════
-    // 7. OBSERVER DE REVEAL (Animações de entrada)
-    // ════════════════════════════════════════════════
-    const initScrollReveal = () => {
+        // Active Nav Link via IntersectionObserver
+        const sections = document.querySelectorAll('section[id]');
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    // Opcional: observer.unobserve(entry.target) para animar só uma vez
+                    const id = entry.target.getAttribute('id');
+                    links.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${id}`) {
+                            link.classList.add('active');
+                        }
+                    });
                 }
             });
-        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
-
-        document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+        }, { threshold: 0.3 });
+        
+        sections.forEach(sec => observer.observe(sec));
     };
-    initScrollReveal();
 
-    // ════════════════════════════════════════════════
-    // 8. EFEITO TYPEWRITER
-    // ════════════════════════════════════════════════
-    const initTypewriter = () => {
-        const textElement = document.getElementById('typewriter-text');
-        if (!textElement) return;
-
-        const words = ['Criar.', 'Automatizar.', 'Inovar.', 'Conectar.', 'Controlar.'];
-        let wordIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-        
-        // Delay inicial para dar tempo da loading screen sair
-        setTimeout(() => {
-            type();
-        }, 2500);
-
-        function type() {
-            const currentWord = words[wordIndex];
-            
-            if (isDeleting) {
-                textElement.textContent = currentWord.substring(0, charIndex - 1);
-                charIndex--;
-            } else {
-                textElement.textContent = currentWord.substring(0, charIndex + 1);
-                charIndex++;
-            }
-
-            let typeSpeed = isDeleting ? 50 : 120;
-
-            if (!isDeleting && charIndex === currentWord.length) {
-                typeSpeed = 2000; // Pausa no final da palavra
-                isDeleting = true;
-            } else if (isDeleting && charIndex === 0) {
-                isDeleting = false;
-                wordIndex = (wordIndex + 1) % words.length;
-                typeSpeed = 500; // Pausa antes da próxima palavra
-            }
-
-            setTimeout(type, typeSpeed);
-        }
-    };
-    initTypewriter();
-
-    // ════════════════════════════════════════════════
-    // 9. BACKGROUND DE CONSTELAÇÃO
-    // ════════════════════════════════════════════════
-    const initConstellation = () => {
-        const canvas = document.getElementById('constellation-bg');
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-        
-        // Usar prefers-reduced-motion
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // 4. SCROLL REVEAL & CIRCUIT DIVIDERS
+    const initScrollReveal = () => {
         if (prefersReducedMotion) {
-            canvas.style.display = 'none';
+            document.querySelectorAll('[data-reveal], h2, .circuit-divider').forEach(el => el.classList.add('is-visible'));
             return;
         }
-
-        const resize = () => {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            initParticles();
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+        
+        window.observeElements = (elements) => {
+            elements.forEach(el => observer.observe(el));
         };
+        
+        window.observeElements(document.querySelectorAll('[data-reveal], h2, .circuit-divider'));
+    };
 
+    // 5. HERO PARALLAX & 3D TILT CARDS
+    const initInteractions = () => {
+        if (prefersReducedMotion || !window.matchMedia('(pointer: fine)').matches) return;
+        
+        const heroBadge = document.getElementById('hero-badge');
+        const heroContent = document.querySelector('.hero-content');
+        const heroVisual = document.getElementById('hero-visual-wrapper') || document.getElementById('hero-visual');
+        const tiltCards = document.querySelectorAll('.future-card');
+        
+        window.addEventListener('mousemove', (e) => {
+            // Hero Parallax
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            
+            requestAnimationFrame(() => {
+                if (heroBadge) heroBadge.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
+                if (heroContent) heroContent.style.transform = `translate(${x * -0.5}px, ${y * -0.5}px)`;
+                if (heroVisual) heroVisual.style.transform = `translate(${x * 1.5}px, ${y * 1.5}px) rotate(${x * 0.1}deg)`;
+            });
+        });
+
+        // 3D Tilt Future Cards
+        tiltCards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    };
+
+    // 6. CANVAS: CONSTELAÇÃO
+    const initConstellation = () => {
+        const canvas = document.getElementById('constellation-bg');
+        if (!canvas || prefersReducedMotion) return;
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        const numParticles = 120;
+        const mouse = { x: null, y: null, radius: 150 };
+        
+        const resize = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+        
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseout', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+        
         class Particle {
             constructor() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.3;
-                this.vy = (Math.random() - 0.5) * 0.3;
-                this.radius = Math.random() * 1.5 + 0.5;
+                this.size = Math.random() * 2 + 0.5;
+                this.density = (Math.random() * 30) + 1;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
             }
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
                 
-                if (this.x < 0 || this.x > width) this.vx = -this.vx;
-                if (this.y < 0 || this.y > height) this.vy = -this.vy;
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0, 212, 255, 0.4)';
-                ctx.fill();
-            }
-        }
-
-        const initParticles = () => {
-            particles = [];
-            const count = Math.min(Math.floor((width * height) / 15000), 100);
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle());
-            }
-        };
-
-        const drawLines = () => {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+                
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    let forceDirectionX = dx / distance;
+                    let forceDirectionY = dy / distance;
+                    let maxDistance = mouse.radius;
+                    let force = (maxDistance - distance) / maxDistance;
+                    let directionX = forceDirectionX * force * this.density;
+                    let directionY = forceDirectionY * force * this.density;
                     
-                    if (dist < 120) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.1 - (dist / 120) * 0.1})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
+                    if (distance < mouse.radius) {
+                        this.x -= directionX;
+                        this.y -= directionY;
                     }
                 }
             }
-        };
-
-        let animationId;
+            draw() {
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        for (let i = 0; i < numParticles; i++) {
+            particles.push(new Particle());
+        }
+        
         const animate = () => {
             ctx.clearRect(0, 0, width, height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            drawLines();
-            animationId = requestAnimationFrame(animate);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${1 - distance/100})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
         };
+        animate();
+    };
 
+    // 7. CANVAS: DIGITAL RAIN
+    const initDigitalRain = () => {
+        const canvas = document.getElementById('digital-rain');
+        if (!canvas || prefersReducedMotion) return;
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        const resize = () => {
+            const parent = canvas.parentElement;
+            width = canvas.width = parent.offsetWidth;
+            height = canvas.height = parent.offsetHeight;
+        };
         window.addEventListener('resize', resize);
         resize();
         
-        // IntersectionObserver para pausar a animação (Otimização CPU/GPU)
-        const heroSection = document.querySelector('.hero');
-        if (heroSection) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        if (!animationId) animate();
-                    } else {
-                        if (animationId) {
-                            cancelAnimationFrame(animationId);
-                            animationId = null;
-                        }
-                    }
-                });
-            });
-            observer.observe(heroSection);
-        } else {
-            animate();
-        }
-    };
-    initConstellation();
-    
-    // ════════════════════════════════════════════════
-    // 10. DIGITAL RAIN (MATRIX) PARA SEÇÃO FUTURO
-    // ════════════════════════════════════════════════
-    const initDigitalRain = () => {
-        const canvas = document.getElementById('digital-rain');
-        if (!canvas) return;
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789アァカサタナハマヤャラワガザダバパイィキシチニヒミリヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレゲゼデベペオォコソトノホモヨョロゴゾドボポヴッン'.split('');
+        const fontSize = 14;
+        let columns = Math.floor(width / fontSize);
+        const drops = [];
+        for (let i = 0; i < columns; i++) drops[i] = Math.random() * -100; // random start offset
         
-        const ctx = canvas.getContext('2d');
-        const section = canvas.parentElement;
-        
-        // Usar prefers-reduced-motion
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReducedMotion) {
-            canvas.style.display = 'none';
-            return;
-        }
-
-        let width, height;
-        let columns;
-        let drops = [];
-        const chars = "01".split("");
-
-        const resize = () => {
-            const rect = section.getBoundingClientRect();
-            width = rect.width;
-            height = rect.height;
-            canvas.width = width;
-            canvas.height = height;
-            
-            const fontSize = 14;
-            columns = width / fontSize;
-            drops = [];
-            for (let x = 0; x < columns; x++) {
-                drops[x] = 1;
-            }
-        };
-
+        let animationId;
         const draw = () => {
-            // Fundo translúcido para criar rastro
-            ctx.fillStyle = "rgba(5, 5, 9, 0.05)";
+            ctx.fillStyle = 'rgba(5, 5, 9, 0.1)';
             ctx.fillRect(0, 0, width, height);
             
-            ctx.fillStyle = "rgba(0, 212, 255, 0.3)";
-            ctx.font = "14px monospace";
+            ctx.fillStyle = 'rgba(0, 212, 255, 0.5)'; // neon cyan rain
+            ctx.font = fontSize + 'px monospace';
             
             for (let i = 0; i < drops.length; i++) {
-                const text = chars[Math.floor(Math.random() * chars.length)];
-                ctx.fillText(text, i * 14, drops[i] * 14);
+                if (drops[i] * fontSize >= 0) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                }
                 
-                if (drops[i] * 14 > height && Math.random() > 0.975) {
+                if (drops[i] * fontSize > height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
                 drops[i]++;
             }
+            animationId = requestAnimationFrame(draw);
         };
-
-        window.addEventListener('resize', resize);
-        resize();
         
-        // Só animar quando visível
-        let rainInterval;
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if(entry.isIntersecting) {
-                    if(!rainInterval) rainInterval = setInterval(draw, 50);
-                } else {
-                    clearInterval(rainInterval);
-                    rainInterval = null;
+            if (entries[0].isIntersecting) {
+                if (!animationId) draw();
+            } else {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
                 }
-            });
+            }
         });
-        observer.observe(section);
+        observer.observe(canvas.parentElement);
     };
+
+    // 8. SIMULAÇÃO LEDs
+    const initSimulation = () => {
+        const startBtn = document.getElementById('sim-start');
+        const stopBtn = document.getElementById('sim-stop');
+        const speedRange = document.getElementById('sim-speed-range');
+        const speedValue = document.getElementById('sim-speed-value');
+        const statusEl = document.getElementById('sim-status');
+        const codeDisplay = document.getElementById('sim-code-display');
+        const leds = [
+            document.getElementById('sim-led-1'),
+            document.getElementById('sim-led-2'),
+            document.getElementById('sim-led-3'),
+            document.getElementById('sim-led-4')
+        ];
+        
+        if (!startBtn || !stopBtn || !speedRange) return;
+        
+        // Preview do código
+        if (window.projects && codeDisplay) {
+            const projPiscante = window.projects.find(p => p.id === "piscante" || p.id === 1);
+            if (projPiscante) {
+                codeDisplay.innerHTML = highlightSyntax(projPiscante.code);
+            }
+        }
+        
+        let intervalId = null;
+        let currentLed = 0;
+        let speed = parseInt(speedRange.value);
+        
+        const updateLeds = () => {
+            leds.forEach(led => led.classList.remove('active'));
+            if (leds[currentLed]) {
+                const color = leds[currentLed].dataset.color;
+                leds[currentLed].style.setProperty('--color-active', color);
+                leds[currentLed].classList.add('active');
+            }
+            currentLed = (currentLed + 1) % leds.length;
+        };
+        
+        const play = () => {
+            if (intervalId) clearInterval(intervalId);
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusEl.textContent = 'Simulação em execução...';
+            statusEl.style.color = '#44ff88';
+            updateLeds();
+            intervalId = setInterval(updateLeds, speed);
+        };
+        
+        const stop = () => {
+            if (intervalId) clearInterval(intervalId);
+            intervalId = null;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            statusEl.textContent = 'Simulação pausada';
+            statusEl.style.color = 'var(--neon-cyan)';
+            leds.forEach(led => led.classList.remove('active'));
+            currentLed = 0;
+        };
+        
+        startBtn.addEventListener('click', play);
+        stopBtn.addEventListener('click', stop);
+        
+        speedRange.addEventListener('input', (e) => {
+            speed = parseInt(e.target.value);
+            speedValue.textContent = `${speed}ms`;
+            if (intervalId) play(); // reinicia com a nova velocidade
+        });
+    };
+
+    // 9. RENDER PROJECTS & MODAL
+    const initProjectsAndModal = () => {
+        const grid = document.getElementById('projects-grid');
+        const modal = document.getElementById('code-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const copyBtn = document.getElementById('copy-code-btn');
+        const copyText = document.getElementById('copy-btn-text');
+        
+        // Renderizar projetos
+        if (grid && window.projects) {
+            grid.innerHTML = window.projects.map((proj, index) => {
+                const delay = (index % 3) * 100;
+                const diffClass = proj.difficulty.toLowerCase().replace(/[éáíóú]/g, (m) => ({ 'é':'e', 'á':'a', 'í':'i', 'ó':'o', 'ú':'u' }[m] || m));
+                
+                const chips = proj.components.map(c => `<span class="comp-chip">${c}</span>`).join('');
+                
+                return `
+                <article class="project-card" data-reveal style="--reveal-delay: ${delay}ms">
+                    <span class="project-number">#${String(index + 1).padStart(2, '0')}</span>
+                    <h3 class="project-title">${proj.title}</h3>
+                    <p class="project-desc">${proj.description}</p>
+                    <div class="project-components">
+                        ${chips}
+                    </div>
+                    <div class="project-footer">
+                        <span class="badge-difficulty badge-${diffClass}">${proj.difficulty}</span>
+                        <button class="project-btn" data-id="${proj.id}">Ver Código</button>
+                    </div>
+                </article>`;
+            }).join('');
+            
+            // Observar novos elementos
+            if (window.observeElements) window.observeElements(grid.querySelectorAll('[data-reveal]'));
+            if (window.addCursorHover) window.addCursorHover();
+        }
+
+        if (!modal) return;
+
+        // Funções do Modal
+        const openModal = (proj) => {
+            document.getElementById('modal-title').textContent = proj.title;
+            const diffClass = proj.difficulty.toLowerCase().replace(/[éáíóú]/g, (m) => ({ 'é':'e', 'á':'a', 'í':'i', 'ó':'o', 'ú':'u' }[m] || m));
+            const diffBadge = document.getElementById('modal-difficulty');
+            if (diffBadge) {
+                diffBadge.textContent = proj.difficulty;
+                diffBadge.className = `badge-difficulty badge-${diffClass}`;
+            }
+            
+            const componentsList = document.getElementById('modal-components');
+            if (componentsList) {
+                componentsList.innerHTML = proj.components.map(c => `<li>${c}</li>`).join('');
+            }
+            
+            const codeEl = document.getElementById('modal-code');
+            if (codeEl) {
+                codeEl.innerHTML = highlightSyntax(proj.code);
+            }
+            
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden'; // block bg scroll
+            
+            // Focus trap (simples)
+            setTimeout(() => closeModalBtn?.focus(), 100);
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        };
+
+        // Event Delegation para botões de projeto
+        if (grid) {
+            grid.addEventListener('click', (e) => {
+                const btn = e.target.closest('.project-btn');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                const proj = window.projects.find(p => String(p.id) === String(id));
+                if (proj) openModal(proj);
+            });
+        }
+
+        // Fechar modal eventos
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Copy to clipboard
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const codeEl = document.getElementById('modal-code');
+                if (!codeEl) return;
+                
+                navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                    copyBtn.classList.add('copied');
+                    if (copyText) copyText.textContent = '✓ Copiado';
+                    
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        if (copyText) copyText.textContent = 'Copiar';
+                    }, 2200);
+                }).catch(err => console.error('Erro ao copiar código: ', err));
+            });
+        }
+    };
+
+    // Inicialização da Arquitetura
+    initBootAndTypewriter();
+    initCustomCursor();
+    initNavigation();
+    initScrollReveal();
+    initInteractions();
+    initConstellation();
     initDigitalRain();
-
-    // ════════════════════════════════════════════════
-    // 11. SIMULAÇÃO DOS LEDS (Dinâmica)
-    // ════════════════════════════════════════════════
-    let simInterval;
-    
-    const initSimulation = (projectId = 'piscante') => {
-        let startBtn = document.getElementById('sim-start');
-        let stopBtn = document.getElementById('sim-stop');
-        let statusEl = document.getElementById('sim-status');
-        let speedRange = document.getElementById('sim-speed-range');
-        let speedValue = document.getElementById('sim-speed-value');
-        let codeDisplay = document.getElementById('sim-code-display');
-        
-        if (simInterval) clearInterval(simInterval);
-        
-        let currentLed = 1;
-        let isRunning = false;
-        
-        // Buscar projeto de forma dinâmica
-        let project = typeof projectsData !== 'undefined' ? projectsData.find(p => p.id === projectId) : null;
-        if (!project && typeof projectsData !== 'undefined' && projectsData.length > 0) {
-            project = projectsData.find(p => p.title.toLowerCase().includes('piscante')) || projectsData[0];
-        }
-        
-        let code = project ? project.code : 'void setup() {} void loop() {}';
-        
-        if (codeDisplay) {
-            codeDisplay.innerHTML = highlightCode(code);
-            const filenameEl = codeDisplay.closest('.editor-window').querySelector('.editor-filename');
-            if(filenameEl) filenameEl.textContent = project ? project.title : 'SIMULACAO.ino';
-        }
-
-        // LEDs obtidos do DOM para preparar terreno para novos componentes
-        const leds = Array.from(document.querySelectorAll('[id^="sim-led-"]'));
-
-        const resetLeds = () => {
-            leds.forEach(led => {
-                led.classList.remove('sim-led--on');
-                led.style.setProperty('--led-glow', 'transparent');
-            });
-        };
-
-        const step = () => {
-            resetLeds();
-            if(leds.length === 0) return;
-            
-            const activeLed = leds[currentLed - 1];
-            if(activeLed) {
-                const color = activeLed.getAttribute('data-color') || '#00d4ff';
-                activeLed.classList.add('sim-led--on');
-                activeLed.style.setProperty('--led-glow', color);
-                if (statusEl) statusEl.innerHTML = `LIGADO: <span style="color:${color}">LED A${currentLed}</span>`;
-            }
-            currentLed = currentLed >= leds.length ? 1 : currentLed + 1;
-        };
-
-        const startSim = () => {
-            if (isRunning) return;
-            isRunning = true;
-            if(startBtn) startBtn.disabled = true;
-            if(stopBtn) stopBtn.disabled = false;
-            
-            const speed = speedRange ? parseInt(speedRange.value) : 500;
-            step(); // executa imediato
-            simInterval = setInterval(step, speed);
-        };
-
-        const stopSim = () => {
-            if (!isRunning) return;
-            isRunning = false;
-            if(startBtn) startBtn.disabled = false;
-            if(stopBtn) stopBtn.disabled = true;
-            
-            clearInterval(simInterval);
-            resetLeds();
-            if(statusEl) statusEl.textContent = 'Simulação pausada';
-            currentLed = 1;
-        };
-
-        const updateSpeed = () => {
-            if(speedValue && speedRange) speedValue.textContent = `${speedRange.value}ms`;
-            if (isRunning) {
-                clearInterval(simInterval);
-                simInterval = setInterval(step, speedRange ? parseInt(speedRange.value) : 500);
-            }
-        };
-
-        // Recriar event listeners de forma limpa caso a função seja chamada múltiplas vezes
-        if (startBtn) {
-            const newStartBtn = startBtn.cloneNode(true);
-            startBtn.parentNode.replaceChild(newStartBtn, startBtn);
-            newStartBtn.addEventListener('click', startSim);
-            startBtn = newStartBtn;
-        }
-        if (stopBtn) {
-            const newStopBtn = stopBtn.cloneNode(true);
-            stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
-            newStopBtn.addEventListener('click', stopSim);
-            stopBtn = newStopBtn;
-        }
-        if (speedRange) {
-            const newSpeedRange = speedRange.cloneNode(true);
-            speedRange.parentNode.replaceChild(newSpeedRange, speedRange);
-            newSpeedRange.addEventListener('input', updateSpeed);
-            speedRange = newSpeedRange;
-        }
-    };
-    initSimulation('piscante');
-    
-    // Destacar código pre-carregado nos blocos de exemplo estáticos
-    const initCodeBlocks = () => {
-        const preElements = document.querySelectorAll('.lang-code-block code');
-        preElements.forEach(block => {
-            const code = block.textContent;
-            block.innerHTML = highlightCode(code);
-        });
-    };
-    initCodeBlocks();
-    
-    // ════════════════════════════════════════════════
-    // 12. PARALLAX NA HERO (Tilt 3D)
-    // ════════════════════════════════════════════════
-    const initParallax = () => {
-        const visual = document.getElementById('hero-visual-wrapper');
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
-        if (!visual || prefersReducedMotion || window.innerWidth <= 768) return;
-        
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.clientX) / 25;
-            const y = (window.innerHeight / 2 - e.clientY) / 25;
-            
-            visual.style.transform = `perspective(1000px) rotateY(${x}deg) rotateX(${-y}deg)`;
-            visual.style.transition = 'transform 0.1s ease-out';
-        });
-        
-        document.addEventListener('mouseleave', () => {
-            visual.style.transform = 'perspective(1000px) rotateY(0) rotateX(0)';
-            visual.style.transition = 'transform 0.5s ease-out';
-        });
-    };
-    initParallax();
+    initSimulation();
+    initProjectsAndModal();
 });

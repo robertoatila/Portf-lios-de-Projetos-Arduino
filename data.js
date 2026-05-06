@@ -802,3 +802,5 @@ void loop()
 }`
     }
 ];
+
+window.projects = projectsData;
