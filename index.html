@@ -38,7 +38,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Fira+Code:wght@400;500;700&display=swap"
         rel="stylesheet">
 </head>
 
@@ -46,15 +46,13 @@
     <!-- Scroll Progress Bar -->
     <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
 
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loading-screen">
-        <div class="loading-logo">ARDUINO_CORE</div>
+    <!-- Boot Screen -->
+    <div class="boot-screen" id="boot-screen">
+        <div class="loading-logo">ARDUINO_IDE</div>
         <div class="loading-lines" id="loading-lines">
-            <div class="line" data-delay="100">&gt; SYSTEM BOOT...<span class="ok">████░░</span></div>
-            <div class="line" data-delay="500">&gt; LOADING MODULES...<span class="ok">OK</span></div>
-            <div class="line" data-delay="900">&gt; CALIBRATING SENSORS...<span class="ok">OK</span></div>
-            <div class="line" data-delay="1300">&gt; ARDUINO CORE v3.2.1<span class="ok">OK</span></div>
-            <div class="line" data-delay="1700">&gt; ESTABLISHING LINK...<span class="ok">OK</span></div>
+            <div class="line" data-delay="100">&gt; Compilando sketch...</div>
+            <div class="line" data-delay="500">&gt; Inicializando portas seriais...</div>
+            <div class="line" data-delay="1200">&gt; Upload concluído!</div>
         </div>
         <div class="loading-bar-wrap">
             <div class="loading-bar" id="loading-bar"></div>
@@ -102,8 +100,8 @@
         <div class="container hero-grid">
             <div class="hero-content">
                 <div class="hero-badge" id="hero-badge">
-                    <div class="hero-badge-dot"></div>
-                    ⚡ Open Source Platform
+                    <div class="hero-badge-dot pulse-dot"></div>
+                    Status: Sistema Online
                 </div>
                 <h1 class="hero-title" id="hero-title">
                     <span class="typewriter-text" id="typewriter-text"></span><span class="typewriter-cursor"></span>
@@ -190,11 +188,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -284,11 +288,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -347,11 +357,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -404,11 +420,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -518,11 +540,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -602,11 +630,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -736,11 +770,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 
@@ -759,11 +799,17 @@
         <!-- Divisor -->
         <div class="circuit-divider" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
             <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
-                <path d="M0,20 L200,20 L220,5 L400,5 L420,20 L600,20 L620,35 L800,35 L820,20 L1200,20" fill="none"
-                    stroke="currentColor" stroke-width="1" class="circuit-path" />
-                <circle cx="200" cy="20" r="3" class="circuit-node" />
-                <circle cx="600" cy="20" r="3" class="circuit-node" />
-                <circle cx="1000" cy="20" r="3" class="circuit-node" />
+                <!-- Track 1 -->
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <!-- Track 2 -->
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none"
+                    stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
         </div>
 

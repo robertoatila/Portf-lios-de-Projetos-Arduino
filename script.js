@@ -45,10 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ════════════════════════════════════════════════
-    // 2. SISTEMA DE LOADING
+    // 2. SISTEMA DE LOADING (BOOT SCREEN)
     // ════════════════════════════════════════════════
     const initLoadingScreen = () => {
-        const loadingScreen = document.getElementById('loading-screen');
+        const loadingScreen = document.getElementById('boot-screen');
         const lines = document.querySelectorAll('.loading-lines .line');
         const progressBar = document.getElementById('loading-bar');
         
@@ -62,12 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }, delay);
         });
         
-        // Barra de progresso
+        // Barra de progresso (aumenta o delay para simular um processo mais longo e visível)
         setTimeout(() => {
             if(progressBar) progressBar.style.width = '100%';
-        }, 100);
+        }, 300);
         
-        // Ocultar overlay após a sequência
+        // Ocultar overlay após a sequência (aproximadamente 2s a 2.5s)
         setTimeout(() => {
             loadingScreen.classList.add('done');
             document.body.style.overflow = 'auto'; // Reativar scroll
