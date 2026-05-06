@@ -50,11 +50,6 @@ Como o projeto é livre de dependências, visualizá-lo localmente é tão simpl
 3. Dê um duplo-clique no arquivo `index.html`.
 4. *Pronto!* A magia acontece direto no seu navegador. *(Nota: Por limitações de segurança CORS de navegadores, abrir localmente via `file:///` pode acusar erros ao ler o `manifest.json`. Para 100% de suporte, abra via `Live Server` no VS Code).*
 
-## 🌐 Link de Produção
-
-Acesse o portfólio live via GitHub Pages:  
-[**robertoatila.github.io/Portf-lios-de-Projetos-Arduino**](https://robertoatila.github.io/Portf-lios-de-Projetos-Arduino/)
-
 ## 👨‍💻 Autor
 
 **Roberto Átila Almeida Azevedo**  
