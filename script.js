@@ -4,16 +4,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // Utilitários de Performance e Acessibilidade
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Debounce Helper
+    const debounce = (func, wait) => {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    };
+
     // Syntax Highlight C++
     const highlightSyntax = (code) => {
         if (!code) return '';
-        return code
-            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-            .replace(/(\/\/.+)/g, '<span class="token-comment">$1</span>')
+        
+        let htmlEscaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        const strings = [];
+        htmlEscaped = htmlEscaped.replace(/(".*?")/g, (match) => {
+            strings.push(match);
+            return `__STR_${strings.length - 1}__`;
+        });
+        
+        const comments = [];
+        htmlEscaped = htmlEscaped.replace(/(\/\/.*)/g, (match) => {
+            comments.push(match);
+            return `__COM_${comments.length - 1}__`;
+        });
+        
+        htmlEscaped = htmlEscaped
             .replace(/\b(int|void|const|char|float|bool|long|String)\b/g, '<span class="token-keyword">$1</span>')
             .replace(/\b(HIGH|LOW|OUTPUT|INPUT|INPUT_PULLUP|true|false)\b/g, '<span class="token-keyword">$1</span>')
             .replace(/\b(digitalWrite|digitalRead|pinMode|delay|setup|loop|analogRead|analogWrite|Serial|begin|print|println|tone|noTone|pulseIn)\b/g, '<span class="token-function">$1</span>')
             .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
+            
+        htmlEscaped = htmlEscaped.replace(/__COM_(\d+)__/g, (match, p1) => {
+            return `<span class="token-comment">${comments[p1]}</span>`;
+        });
+        
+        htmlEscaped = htmlEscaped.replace(/__STR_(\d+)__/g, (match, p1) => {
+            return `<span style="color: #ce9178;">${strings[p1]}</span>`;
+        });
+            
+        return htmlEscaped;
     };
 
     // 1. BOOT SCREEN & TYPEWRITER
@@ -294,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
         };
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', debounce(resize, 200));
         resize();
         
         window.addEventListener('mousemove', (e) => {
@@ -389,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = canvas.width = parent.offsetWidth;
             height = canvas.height = parent.offsetHeight;
         };
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', debounce(resize, 200));
         resize();
         
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789アァカサタナハマヤャラワガザダバパイィキシチニヒミリヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレゲゼデベペオォコソトノホモヨョロゴゾドボポヴッン'.split('');
@@ -512,8 +544,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const copyText = document.getElementById('copy-btn-text');
         
         // Renderizar projetos
-        if (grid && window.projects) {
-            grid.innerHTML = window.projects.map((proj, index) => {
+        const renderProjects = (filter = 'all') => {
+            if (!grid || !window.projects) return;
+            
+            const filtered = filter === 'all' 
+                ? window.projects 
+                : window.projects.filter(p => p.difficulty.toLowerCase() === filter);
+                
+            grid.innerHTML = filtered.map((proj, index) => {
                 const delay = (index % 3) * 100;
                 const diffClass = proj.difficulty.toLowerCase().replace(/[éáíóú]/g, (m) => ({ 'é':'e', 'á':'a', 'í':'i', 'ó':'o', 'ú':'u' }[m] || m));
                 
@@ -537,6 +575,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Observar novos elementos
             if (window.observeElements) window.observeElements(grid.querySelectorAll('[data-reveal]'));
             if (window.addCursorHover) window.addCursorHover();
+        };
+
+        if (grid) {
+            renderProjects();
+            grid.style.transition = 'opacity 0.3s ease';
+            
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    grid.style.opacity = '0';
+                    setTimeout(() => {
+                        renderProjects(btn.dataset.filter);
+                        grid.style.opacity = '1';
+                    }, 300);
+                });
+            });
         }
 
         if (!modal) return;

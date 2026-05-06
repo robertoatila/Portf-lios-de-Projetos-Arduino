@@ -1,0 +1,16 @@
+{
+  "name": "Portfólio de Arduino - Roberto Átila",
+  "short_name": "Arduino Portfolio",
+  "description": "Explorando o mundo do Arduino: projetos interativos, simulações de LED, código-fonte e documentação técnica.",
+  "start_url": "/Portf-lios-de-Projetos-Arduino/",
+  "display": "standalone",
+  "background_color": "#050509",
+  "theme_color": "#050509",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
