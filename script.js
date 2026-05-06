@@ -10,15 +10,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Utilitário de formatação de código Arduino C++
     const highlightCode = (code) => {
-        // Escapar HTML
         let escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
-        // Comentários (// ou /* */)
-        escaped = escaped.replace(/(\/\/.*$)/gm, '<span class="token-comment">$1</span>');
-        escaped = escaped.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="token-comment">$1</span>');
+        const tokens = [];
+        let tokenIndex = 0;
+        
+        const protect = (match, type) => {
+            const placeholder = `__TOKEN_${tokenIndex}__`;
+            tokens.push({ placeholder, text: `<span class="${type}">${match}</span>` });
+            tokenIndex++;
+            return placeholder;
+        };
+
+        // Strings e comentários primeiro (protegidos)
+        escaped = escaped.replace(/("[^"]*")/g, m => protect(m, 'token-string'));
+        escaped = escaped.replace(/(\/\/.*$)/gm, m => protect(m, 'token-comment'));
+        escaped = escaped.replace(/(\/\*[\s\S]*?\*\/)/g, m => protect(m, 'token-comment'));
         
         // Diretivas do pre-processador (#include, #define)
-        escaped = escaped.replace(/^(#\w+.*)$/gm, '<span class="token-directive">$1</span>');
+        escaped = escaped.replace(/^(#\w+.*)$/gm, m => protect(m, 'token-directive'));
         
         // Palavras-chave
         const keywords = ['void', 'int', 'float', 'bool', 'char', 'long', 'if', 'else', 'for', 'while', 'return', 'const'];
@@ -35,11 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const funcRegex = new RegExp(`\\b(${functions.join('|')})(?=\\s*\\()`, 'g');
         escaped = escaped.replace(funcRegex, '<span class="token-function">$1</span>');
         
-        // Strings ("texto")
-        escaped = escaped.replace(/("[^"]*")/g, '<span class="token-string">$1</span>');
-        
         // Números
         escaped = escaped.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="token-number">$1</span>');
+        
+        // Restaurar tokens protegidos
+        tokens.forEach(t => {
+            escaped = escaped.replace(t.placeholder, t.text);
+        });
         
         return escaped;
     };
@@ -93,49 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ════════════════════════════════════════════════
     // 3. CURSOR CUSTOMIZADO
     // ════════════════════════════════════════════════
-    const initCursor = () => {
-        const cursor = document.getElementById('cursor');
-        if (!cursor) return;
-
-        // Desativar em telas pequenas (touch)
-        if (window.innerWidth <= 768) {
-            cursor.style.display = 'none';
-            return;
-        }
-
-        let mouseX = 0, mouseY = 0;
-        let cursorX = 0, cursorY = 0;
-        
-        // Suavização do cursor
-        const animate = () => {
-            cursorX += (mouseX - cursorX) * 0.2;
-            cursorY += (mouseY - cursorY) * 0.2;
-            cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
-            requestAnimationFrame(animate);
-        };
-        requestAnimationFrame(animate);
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            cursor.classList.remove('hidden');
-        });
-
-        document.addEventListener('mouseleave', () => {
-            cursor.classList.add('hidden');
-        });
-
-        document.addEventListener('mousedown', () => cursor.classList.add('clicking'));
-        document.addEventListener('mouseup', () => cursor.classList.remove('clicking'));
-
-        // Efeitos de hover
-        const hoverElements = document.querySelectorAll('a, button, .card, .step-card, .comp-card');
-        hoverElements.forEach(el => {
-            el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
-            el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
-        });
-    };
-    initCursor();
+    // A lógica do cursor foi extraída para 'cursor.js' para manter o princípio DRY.
 
     // ════════════════════════════════════════════════
     // 4. RENDERIZAÇÃO DOS PROJETOS
@@ -474,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        let animationId;
         const animate = () => {
             ctx.clearRect(0, 0, width, height);
             particles.forEach(p => {
@@ -481,12 +452,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 p.draw();
             });
             drawLines();
-            requestAnimationFrame(animate);
+            animationId = requestAnimationFrame(animate);
         };
 
         window.addEventListener('resize', resize);
         resize();
-        animate();
+        
+        // IntersectionObserver para pausar a animação (Otimização CPU/GPU)
+        const heroSection = document.querySelector('.hero');
+        if (heroSection) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (!animationId) animate();
+                    } else {
+                        if (animationId) {
+                            cancelAnimationFrame(animationId);
+                            animationId = null;
+                        }
+                    }
+                });
+            });
+            observer.observe(heroSection);
+        } else {
+            animate();
+        }
     };
     initConstellation();
     
@@ -566,52 +556,39 @@ document.addEventListener('DOMContentLoaded', () => {
     initDigitalRain();
 
     // ════════════════════════════════════════════════
-    // 11. SIMULAÇÃO DOS LEDS
+    // 11. SIMULAÇÃO DOS LEDS (Dinâmica)
     // ════════════════════════════════════════════════
-    const initSimulation = () => {
-        const startBtn = document.getElementById('sim-start');
-        const stopBtn = document.getElementById('sim-stop');
-        const statusEl = document.getElementById('sim-status');
-        const speedRange = document.getElementById('sim-speed-range');
-        const speedValue = document.getElementById('sim-speed-value');
-        const codeDisplay = document.getElementById('sim-code-display');
+    let simInterval;
+    
+    const initSimulation = (projectId = 'piscante') => {
+        let startBtn = document.getElementById('sim-start');
+        let stopBtn = document.getElementById('sim-stop');
+        let statusEl = document.getElementById('sim-status');
+        let speedRange = document.getElementById('sim-speed-range');
+        let speedValue = document.getElementById('sim-speed-value');
+        let codeDisplay = document.getElementById('sim-code-display');
         
-        let simInterval;
+        if (simInterval) clearInterval(simInterval);
+        
         let currentLed = 1;
         let isRunning = false;
         
-        // Encontrar o código do PISCANTE no data.js, fallback se não achar
-        let piscanteCode = `void setup() {
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
-  pinMode(11, OUTPUT);
-}
-void loop() {
-  digitalWrite(8, HIGH); delay(500);
-  digitalWrite(8, LOW);
-  digitalWrite(9, HIGH); delay(500);
-  digitalWrite(9, LOW);
-  digitalWrite(10, HIGH); delay(500);
-  digitalWrite(10, LOW);
-  digitalWrite(11, HIGH); delay(500);
-  digitalWrite(11, LOW);
-}`;
-        if(typeof projectsData !== 'undefined') {
-            const p = projectsData.find(p => p.title.toLowerCase().includes('piscante'));
-            if(p) piscanteCode = p.code;
+        // Buscar projeto de forma dinâmica
+        let project = typeof projectsData !== 'undefined' ? projectsData.find(p => p.id === projectId) : null;
+        if (!project && typeof projectsData !== 'undefined' && projectsData.length > 0) {
+            project = projectsData.find(p => p.title.toLowerCase().includes('piscante')) || projectsData[0];
         }
         
+        let code = project ? project.code : 'void setup() {} void loop() {}';
+        
         if (codeDisplay) {
-            codeDisplay.innerHTML = highlightCode(piscanteCode);
+            codeDisplay.innerHTML = highlightCode(code);
+            const filenameEl = codeDisplay.closest('.editor-window').querySelector('.editor-filename');
+            if(filenameEl) filenameEl.textContent = project ? project.title : 'SIMULACAO.ino';
         }
 
-        const leds = [
-            document.getElementById('sim-led-1'),
-            document.getElementById('sim-led-2'),
-            document.getElementById('sim-led-3'),
-            document.getElementById('sim-led-4')
-        ].filter(Boolean); // Remover nulos caso existam
+        // LEDs obtidos do DOM para preparar terreno para novos componentes
+        const leds = Array.from(document.querySelectorAll('[id^="sim-led-"]'));
 
         const resetLeds = () => {
             leds.forEach(led => {
@@ -622,12 +599,14 @@ void loop() {
 
         const step = () => {
             resetLeds();
+            if(leds.length === 0) return;
+            
             const activeLed = leds[currentLed - 1];
             if(activeLed) {
-                const color = activeLed.getAttribute('data-color');
+                const color = activeLed.getAttribute('data-color') || '#00d4ff';
                 activeLed.classList.add('sim-led--on');
                 activeLed.style.setProperty('--led-glow', color);
-                statusEl.innerHTML = `LIGADO: <span style="color:${color}">LED A${currentLed}</span>`;
+                if (statusEl) statusEl.innerHTML = `LIGADO: <span style="color:${color}">LED A${currentLed}</span>`;
             }
             currentLed = currentLed >= leds.length ? 1 : currentLed + 1;
         };
@@ -635,10 +614,10 @@ void loop() {
         const startSim = () => {
             if (isRunning) return;
             isRunning = true;
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
+            if(startBtn) startBtn.disabled = true;
+            if(stopBtn) stopBtn.disabled = false;
             
-            const speed = parseInt(speedRange.value);
+            const speed = speedRange ? parseInt(speedRange.value) : 500;
             step(); // executa imediato
             simInterval = setInterval(step, speed);
         };
@@ -646,37 +625,54 @@ void loop() {
         const stopSim = () => {
             if (!isRunning) return;
             isRunning = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
+            if(startBtn) startBtn.disabled = false;
+            if(stopBtn) stopBtn.disabled = true;
             
             clearInterval(simInterval);
             resetLeds();
-            statusEl.textContent = 'Simulação pausada';
+            if(statusEl) statusEl.textContent = 'Simulação pausada';
             currentLed = 1;
         };
 
         const updateSpeed = () => {
-            speedValue.textContent = `${speedRange.value}ms`;
+            if(speedValue && speedRange) speedValue.textContent = `${speedRange.value}ms`;
             if (isRunning) {
                 clearInterval(simInterval);
-                simInterval = setInterval(step, parseInt(speedRange.value));
+                simInterval = setInterval(step, speedRange ? parseInt(speedRange.value) : 500);
             }
         };
 
-        if (startBtn && stopBtn && speedRange) {
-            startBtn.addEventListener('click', startSim);
-            stopBtn.addEventListener('click', stopSim);
-            speedRange.addEventListener('input', updateSpeed);
+        // Recriar event listeners de forma limpa caso a função seja chamada múltiplas vezes
+        if (startBtn) {
+            const newStartBtn = startBtn.cloneNode(true);
+            startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+            newStartBtn.addEventListener('click', startSim);
+            startBtn = newStartBtn;
         }
-        
-        // Destacar código pre-carregado
+        if (stopBtn) {
+            const newStopBtn = stopBtn.cloneNode(true);
+            stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
+            newStopBtn.addEventListener('click', stopSim);
+            stopBtn = newStopBtn;
+        }
+        if (speedRange) {
+            const newSpeedRange = speedRange.cloneNode(true);
+            speedRange.parentNode.replaceChild(newSpeedRange, speedRange);
+            newSpeedRange.addEventListener('input', updateSpeed);
+            speedRange = newSpeedRange;
+        }
+    };
+    initSimulation('piscante');
+    
+    // Destacar código pre-carregado nos blocos de exemplo estáticos
+    const initCodeBlocks = () => {
         const preElements = document.querySelectorAll('.lang-code-block code');
         preElements.forEach(block => {
             const code = block.textContent;
             block.innerHTML = highlightCode(code);
         });
     };
-    initSimulation();
+    initCodeBlocks();
     
     // ════════════════════════════════════════════════
     // 12. PARALLAX NA HERO (Tilt 3D)
