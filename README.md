@@ -5,34 +5,38 @@
 </p>
 
 <p align="center">
-  <b>Uma experiência imersiva Maker / Cyberpunk construída com alta performance e zero frameworks.</b>
+  <b>Uma experiência imersiva Maker / Cyberpunk construída com altíssima performance, acessibilidade e zero frameworks.</b>
 </p>
 
 ---
 
 ## 🚀 Sobre o Projeto
 
-Este repositório contém o código-fonte do portfólio de projetos Arduino de **Roberto Átila**, estudante do curso Técnico em Informática para Internet. O projeto foi redesenhado do zero para refletir uma estética *hardcore*, inspirada em terminais, placas de circuito impresso (PCBs) e na IDE do Arduino.
+Este repositório contém o código-fonte do portfólio de projetos Arduino de **Roberto Átila**, estudante do curso Técnico em Informática para Internet. O projeto foi redesenhado do zero para refletir uma estética *hardcore*, inspirada em terminais, placas de circuito impresso (PCBs) e na IDE clássica do Arduino.
 
-O maior desafio técnico deste projeto foi garantir uma **performance extrema**, animações complexas e arquitetura escalável utilizando apenas **Vanilla Web Technologies** (sem dependências como React, Vue, ou bibliotecas de animação de terceiros).
+O maior desafio técnico deste projeto foi garantir uma **performance extrema** (simulando 100/100 no Lighthouse), animações fluidas e acessibilidade avançada utilizando apenas **Vanilla Web Technologies** (sem dependências como React, Vue ou bibliotecas de terceiros).
 
 ## 🛠 Stack Tecnológica
 
 *A regra de ouro deste projeto é a imutabilidade da stack base:*
-- **HTML5 Semântico:** Estrutura otimizada, tags semânticas e acessibilidade com atributos ARIA.
-- **CSS3 Puro:** Variáveis nativas (Design System), Flexbox, CSS Grid, animações `@keyframes` complexas, Glassmorphism e Efeitos Neon Glow.
-- **JavaScript ES6+:** Módulos lógicos via closures, `IntersectionObserver`, `requestAnimationFrame`, e manipulação limpa do DOM.
-- **Zero Build Steps:** Sem NPM, Node.js, Webpack ou Vite. Funciona nativamente direto no navegador.
+- **HTML5 Semântico:** Estrutura otimizada e tags acessíveis (`aria-hidden`, `aria-expanded`).
+- **CSS3 Puro:** Variáveis nativas (Design System), animações `@keyframes` complexas, contadores CSS para números de linha e efeitos Neon Glow (Mix-blend-mode / Drop-Shadow).
+- **JavaScript ES6+:** Módulos lógicos via closures, `IntersectionObserver`, `requestAnimationFrame`, `Debounce` de eventos e manipulação profunda de DOM/History.
+- **Progressive Web App (PWA):** `manifest.json` com ícones vetoriais customizados para instalação mobile e web.
+- **Zero Build Steps:** Sem NPM, Node.js, Webpack ou Vite. Roda nativamente direto no navegador.
 
 ## ✨ Principais Funcionalidades e Arquitetura
 
-- **Estética Maker/Cyberpunk:** Paleta de cores baseada em terminais dark (`#0a0e17`) e Azul Arduino (`#00979d`), utilizando as fontes `Chakra Petch` e `Fira Code`.
-- **Boot Screen da IDE:** Sequência de carregamento que simula o log de compilação de um sketch Arduino (`> Compilando sketch...`), bloqueando a interação até o "upload" ser concluído.
-- **Simulador Interativo Dinâmico:** Um simulador construído em JS que carrega projetos dinamicamente de `data.js`, aplicando cores aos LEDs e controlando o tempo de execução e a velocidade dos pulsos (ms) do projeto ativo.
-- **Syntax Highlighter Robusto:** Formatador de código C++ / Arduino feito do zero em JavaScript puro. Utiliza um sistema de *tokenização protegida* com Expressões Regulares (Regex) para colorir com precisão funções, strings, números e keywords.
-- **Cursor Customizado (DRY):** Cursor "mira de precisão" dinâmico com efeitos de *mix-blend-mode* que interage magicamente com botões e links via *Event Delegation*. Lógica totalmente extraída e modularizada em `cursor.js`.
-- **Otimização de Renderização (CPU/GPU):** O *background* animado em Canvas (Constelação) utiliza a API `IntersectionObserver` para pausar os cálculos matemáticos do `requestAnimationFrame` quando não está visível na tela.
-- **UI/UX Avançada:** Scroll reveal progressivo, divisores de seção em SVG no formato de trilhas de PCB, Hero section com tilt 3D interativo e responsividade impecável.
+- **Estética Maker/Cyberpunk:** Paleta de cores dark neon (`#0a0e17`, cyan e purple), utilizando fontes modernas (`Chakra Petch`, `JetBrains Mono`).
+- **Boot Screen Autêntico:** O site inicia com a icônica logo do infinito do Arduino e renderiza no terminal um log de compilação real (`avr-gcc: compiling...`, `avrdude: uploading...`) antes de revelar o conteúdo.
+- **Simulador Interativo Dinâmico:** Um simulador construído em JS que carrega projetos de `data.js`, aplica cores aos LEDs virtuais, e permite controle de velocidade (ms). Inclui um botão para cópia instantânea de código (`Clipboard API`).
+- **Syntax Highlighter com Line Numbers:** Formatador de código C++/Arduino feito do zero em JS puro utilizando expressões regulares protegidas (para não quebrar strings). O código é renderizado no modal simulando uma IDE real com **números de linha nativos (CSS Counters)**.
+- **Navegação com Deep Linking:** Cada projeto possui uma URL única (ex: `#projeto-piscante`). O portfólio escuta a URL no carregamento da página e abre automaticamente o modal do projeto caso o link seja compartilhado.
+- **Acessibilidade - Focus Trap Avançado:** O modal de projetos foi desenhado com um sistema de `Focus Trap` em JS, prendendo o foco da tecla `Tab` nos botões internos do modal para leitores de tela e devolvendo o foco ao elemento original ao fechar.
+- **Otimização de Renderização (CPU/GPU):** 
+  - Animações em Canvas (Chuva Digital e Constelação) contam com `IntersectionObserver` para pausar os cálculos matemáticos quando fora de tela.
+  - O redimensionamento do Canvas utiliza a técnica de **Debounce** para evitar lag ao dar *resize* na tela.
+  - Carregamento assíncrono garantido com o atributo `defer` nos scripts principais.
 
 ## ⚙️ Como Executar Localmente
 
@@ -44,7 +48,7 @@ Como o projeto é livre de dependências, visualizá-lo localmente é tão simpl
    ```
 2. Abra a pasta do projeto.
 3. Dê um duplo-clique no arquivo `index.html`.
-4. *Pronto!* A magia acontece direto no seu navegador.
+4. *Pronto!* A magia acontece direto no seu navegador. *(Nota: Por limitações de segurança CORS de navegadores, abrir localmente via `file:///` pode acusar erros ao ler o `manifest.json`. Para 100% de suporte, abra via `Live Server` no VS Code).*
 
 ## 🌐 Link de Produção
 

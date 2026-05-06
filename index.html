@@ -45,8 +45,13 @@
 <body>
     <!-- Boot Screen -->
     <div class="boot-screen" id="boot-screen" aria-hidden="true" role="status">
-        <svg class="boot-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
+        <svg class="boot-logo" viewBox="-10 0 120 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Infinity Loop -->
+            <path d="M 50 50 l -14 -14 a 22 22 0 1 0 0 28 l 28 -28 a 22 22 0 1 1 0 28 z" stroke-width="8" />
+            <!-- Menus (-) na esquerda -->
+            <path d="M 15 50 h 8" stroke-width="4" />
+            <!-- Mais (+) na direita -->
+            <path d="M 77 50 h 8 M 81 46 v 8" stroke-width="4" />
         </svg>
         <div id="boot-lines"></div>
         <div id="boot-bar"></div>
@@ -112,7 +117,7 @@
                 </div>
             </div>
             <div class="hero-visual" id="hero-visual">
-                <svg viewBox="0 0 500 400" width="100%" height="auto" preserveAspectRatio="xMidYMid meet">
+                <svg viewBox="0 0 500 400" width="100%" preserveAspectRatio="xMidYMid meet">
                     <!-- Detalhes precisos da Placa Arduino Uno -->
                     <!-- Board Body -->
                     <path d="M 50,50 L 400,50 L 430,80 L 430,350 L 50,350 Z" fill="#031622" stroke="var(--neon-cyan)" stroke-width="2" />
@@ -625,13 +630,23 @@
                 <details class="sim-code-details" data-reveal="scale" style="--reveal-delay: 200ms">
                     <summary>Ver o código que está sendo simulado</summary>
                     <div class="editor-window sim-code-preview">
-                        <div class="editor-titlebar">
-                            <span class="dot dot-red" aria-hidden="true"></span>
-                            <span class="dot dot-yellow" aria-hidden="true"></span>
-                            <span class="dot dot-green" aria-hidden="true"></span>
-                            <span class="editor-filename">PISCANTE.ino</span>
+                        <div class="editor-titlebar" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="dot dot-red" aria-hidden="true"></span>
+                                <span class="dot dot-yellow" aria-hidden="true"></span>
+                                <span class="dot dot-green" aria-hidden="true"></span>
+                                <span class="editor-filename" style="margin-left: 0.5rem;">PISCANTE.ino</span>
+                            </div>
+                            <button class="copy-btn" id="sim-copy-btn" aria-label="Copiar código da simulação">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                                <span id="sim-copy-text">Copiar</span>
+                            </button>
                         </div>
-                        <pre class="editor-body" id="sim-code-display"></pre>
+                        <pre class="editor-body" id="sim-code-display" style="counter-reset: line;"></pre>
                     </div>
                 </details>
             </div>
@@ -944,8 +959,8 @@
     <!-- Custom Cursor -->
     <div class="custom-cursor" id="cursor" aria-hidden="true"></div>
 
-    <script src="data.js"></script>
-    <script src="script.js"></script>
+    <script src="data.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
 
 </html>

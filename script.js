@@ -1,6 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
 
+    // Forçar rolagem pro topo no F5 (reload)
+    if (history.scrollRestoration) {
+        history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+
     // Utilitários de Performance e Acessibilidade
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -45,7 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<span style="color: #ce9178;">${strings[p1]}</span>`;
         });
             
-        return htmlEscaped;
+        // Separar em linhas
+        const lines = htmlEscaped.split('\n');
+        return lines.map(line => `<span class="code-line">${line || ' '}</span>`).join('\n');
     };
 
     // 1. BOOT SCREEN & TYPEWRITER
@@ -85,15 +93,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (bootScreen && bootLines && bootBar && bootPct) {
             const messages = [
-                "> SYSTEM BOOT...",
-                "> LOADING KERNEL...",
-                "> MOUNTING VFS...",
-                "> STARTING SERVICES...",
-                "> BOOT COMPLETE."
+                "avr-gcc: compiling sketch...",
+                "avr-g++: compiling core...",
+                "avr-gcc: linking objects...",
+                "avr-objcopy: generating hex...",
+                "avrdude: uploading to /dev/ttyUSB0...",
+                "avrdude: verify successful.",
+                "BOOT COMPLETE."
             ];
             
             let progress = 0;
             let msgIndex = 0;
+            
+            // Preparar bootLines para múltiplas linhas
+            bootLines.innerHTML = '';
             
             const interval = setInterval(() => {
                 progress += Math.floor(Math.random() * 15) + 5;
@@ -102,14 +115,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 bootPct.textContent = `${progress}%`;
                 bootBar.style.setProperty('--progress', `${progress}%`);
                 
-                if (progress % 25 === 0 && msgIndex < messages.length) {
-                    bootLines.textContent = messages[msgIndex];
+                // Adicionar linhas dependendo do progresso
+                const targetMsgIndex = Math.floor((progress / 100) * messages.length);
+                while (msgIndex < targetMsgIndex && msgIndex < messages.length) {
+                    const p = document.createElement('div');
+                    p.textContent = `> ${messages[msgIndex]}`;
+                    bootLines.appendChild(p);
                     msgIndex++;
                 }
                 
                 if (progress === 100) {
                     clearInterval(interval);
-                    bootLines.textContent = messages[messages.length - 1];
                     setTimeout(() => {
                         bootScreen.style.opacity = '0';
                         bootScreen.style.visibility = 'hidden';
@@ -117,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             bootScreen.style.display = 'none';
                             startTypewriter();
                         }, { once: true });
-                    }, 500);
+                    }, 600);
                 }
             }, 100);
 
@@ -127,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     bootScreen.style.display = 'none';
                     startTypewriter();
                 }
-            }, 2400);
+            }, 2500);
         } else {
             startTypewriter();
         }
@@ -483,11 +499,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!startBtn || !stopBtn || !speedRange) return;
         
         // Preview do código
+        let currentSimCode = '';
         if (window.projects && codeDisplay) {
             const projPiscante = window.projects.find(p => p.id === "piscante" || p.id === 1);
             if (projPiscante) {
-                codeDisplay.innerHTML = highlightSyntax(projPiscante.code);
+                currentSimCode = projPiscante.code;
+                codeDisplay.innerHTML = highlightSyntax(currentSimCode);
             }
+        }
+        
+        // Copiar código da simulação
+        const simCopyBtn = document.getElementById('sim-copy-btn');
+        const simCopyText = document.getElementById('sim-copy-text');
+        if (simCopyBtn && currentSimCode) {
+            simCopyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(currentSimCode).then(() => {
+                    const originalText = simCopyText.textContent;
+                    simCopyText.textContent = 'Copiado!';
+                    simCopyBtn.style.color = '#44ff88';
+                    setTimeout(() => {
+                        simCopyText.textContent = originalText;
+                        simCopyBtn.style.color = '';
+                    }, 2000);
+                }).catch(err => console.error('Erro ao copiar código: ', err));
+            });
         }
         
         let intervalId = null;
@@ -598,8 +633,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!modal) return;
 
+        let previousActiveElement = null;
+
         // Funções do Modal
         const openModal = (proj) => {
+            previousActiveElement = document.activeElement;
+            window.location.hash = `#projeto-${proj.id}`;
             document.getElementById('modal-title').textContent = proj.title;
             const diffClass = proj.difficulty.toLowerCase().replace(/[éáíóú]/g, (m) => ({ 'é':'e', 'á':'a', 'í':'i', 'ó':'o', 'ú':'u' }[m] || m));
             const diffBadge = document.getElementById('modal-difficulty');
@@ -622,14 +661,24 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden'; // block bg scroll
             
-            // Focus trap (simples)
-            setTimeout(() => closeModalBtn?.focus(), 100);
+            // Focus trap completo
+            const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const firstElement = focusableElements[0];
+            
+            if (firstElement) {
+                setTimeout(() => firstElement.focus(), 100);
+            }
         };
 
         const closeModal = () => {
+            window.history.pushState('', document.title, window.location.pathname + window.location.search);
             modal.classList.remove('active');
             modal.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
+            
+            if (previousActiveElement) {
+                previousActiveElement.focus();
+            }
         };
 
         // Event Delegation para botões de projeto
@@ -649,8 +698,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === modal) closeModal();
         });
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
+            if (!modal.classList.contains('active')) return;
+            
+            if (e.key === 'Escape') {
                 closeModal();
+            }
+            
+            // Focus Trap Logic
+            if (e.key === 'Tab') {
+                const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+                
+                if (e.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        e.preventDefault();
+                    }
+                }
             }
         });
 
@@ -670,6 +740,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 2200);
                 }).catch(err => console.error('Erro ao copiar código: ', err));
             });
+        }
+        
+        // Deep Linking (Hash On Load)
+        if (window.location.hash && window.location.hash.startsWith('#projeto-')) {
+            const hashId = window.location.hash.replace('#projeto-', '');
+            const proj = window.projects.find(p => String(p.id) === String(hashId));
+            if (proj) {
+                setTimeout(() => openModal(proj), 500); // pequeno atraso para a página estabilizar
+            }
         }
     };
 

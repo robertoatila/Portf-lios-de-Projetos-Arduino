@@ -203,8 +203,8 @@ a:hover {
 }
 
 .boot-logo {
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   margin-bottom: 2rem;
   animation: pulseLogo 2s infinite alternate;
 }
@@ -215,10 +215,16 @@ a:hover {
 }
 
 #boot-lines {
-  font-size: 0.9rem;
-  height: 60px;
+  font-size: 0.85rem;
+  height: 140px;
+  width: 320px;
   margin-bottom: 2rem;
-  text-align: center;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  color: #ccc;
 }
 
 #boot-bar {
@@ -1475,12 +1481,35 @@ input[type=range]::-webkit-slider-runnable-track {
 }
 
 .modal-body pre {
-  padding: 1.5rem;
+  padding: 1.5rem 0;
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.9rem;
   color: #d4d4d4;
   white-space: pre-wrap;
+  counter-reset: line;
+}
+
+.code-line {
+  display: block;
+  counter-increment: line;
+  padding: 0 1.5rem;
+}
+
+.code-line:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.code-line::before {
+  content: counter(line);
+  display: inline-block;
+  width: 2rem;
+  margin-right: 1.5rem;
+  color: rgba(255, 255, 255, 0.2);
+  text-align: right;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding-right: 0.75rem;
+  user-select: none;
 }
 
 /* ==========================================================================
