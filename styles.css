@@ -629,6 +629,7 @@ a:hover {
   padding: 2px;
   background: linear-gradient(45deg, transparent, var(--neon-cyan), transparent);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
@@ -980,12 +981,14 @@ a:hover {
 
 input[type=range] {
   -webkit-appearance: none;
+  appearance: none;
   width: 150px;
   background: transparent;
 }
 
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   height: 16px;
   width: 16px;
   border-radius: 50%;
