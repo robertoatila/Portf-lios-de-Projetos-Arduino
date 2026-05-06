@@ -1,468 +1,704 @@
+/**
+ * Portfólio Arduino - Script Principal
+ * Arquitetura Vanilla JS (ES6+) baseada em módulos lógicos (IIFEs e Closures)
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
-    const projectsGrid = document.getElementById('projects-grid');
-    const modal = document.getElementById('code-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalCode = document.getElementById('modal-code');
-    const modalDifficulty = document.getElementById('modal-difficulty');
-    const modalComponents = document.getElementById('modal-components');
-    const closeModalBtn = document.getElementById('close-modal');
-    const copyCodeBtn = document.getElementById('copy-code-btn');
-    const copyBtnText = document.getElementById('copy-btn-text');
+    // ════════════════════════════════════════════════
+    // 1. UTILITÁRIOS E ESTADO GLOBAL
+    // ════════════════════════════════════════════════
+    
+    // Utilitário de formatação de código Arduino C++
+    const highlightCode = (code) => {
+        // Escapar HTML
+        let escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+        // Comentários (// ou /* */)
+        escaped = escaped.replace(/(\/\/.*$)/gm, '<span class="token-comment">$1</span>');
+        escaped = escaped.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="token-comment">$1</span>');
+        
+        // Diretivas do pre-processador (#include, #define)
+        escaped = escaped.replace(/^(#\w+.*)$/gm, '<span class="token-directive">$1</span>');
+        
+        // Palavras-chave
+        const keywords = ['void', 'int', 'float', 'bool', 'char', 'long', 'if', 'else', 'for', 'while', 'return', 'const'];
+        const keywordRegex = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
+        escaped = escaped.replace(keywordRegex, '<span class="token-keyword">$1</span>');
+        
+        // Constantes do Arduino
+        const constants = ['HIGH', 'LOW', 'INPUT', 'OUTPUT', 'INPUT_PULLUP', 'true', 'false'];
+        const constRegex = new RegExp(`\\b(${constants.join('|')})\\b`, 'g');
+        escaped = escaped.replace(constRegex, '<span class="token-keyword">$1</span>');
+        
+        // Funções do Arduino (pinMode, digitalWrite, etc)
+        const functions = ['setup', 'loop', 'pinMode', 'digitalWrite', 'digitalRead', 'analogRead', 'analogWrite', 'delay', 'Serial', 'begin', 'print', 'println', 'tone', 'noTone', 'pulseIn'];
+        const funcRegex = new RegExp(`\\b(${functions.join('|')})(?=\\s*\\()`, 'g');
+        escaped = escaped.replace(funcRegex, '<span class="token-function">$1</span>');
+        
+        // Strings ("texto")
+        escaped = escaped.replace(/("[^"]*")/g, '<span class="token-string">$1</span>');
+        
+        // Números
+        escaped = escaped.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="token-number">$1</span>');
+        
+        return escaped;
+    };
 
-    let activeTrigger = null;
-    let currentRawCode = '';
-    let focusTrapHandler = null;
-
-    // ========== RENDER PROJECTS ==========
-    function renderProjects() {
-        projectsData.forEach(project => {
-            const card = document.createElement('article');
-            card.className = 'card';
-            const conceptsHTML = (project.concepts || []).map(c => `<span class="concept-tag">${c}</span>`).join('');
-            card.innerHTML = `
-                <div class="card-header">
-                    <h3 class="card-title">${project.title}</h3>
-                    <span class="badge-difficulty" data-level="${project.difficultyLevel || 1}">${project.difficulty || 'Iniciante'}</span>
-                </div>
-                <p class="card-desc">${project.description}</p>
-                <div class="card-concepts">${conceptsHTML}</div>
-                <button class="card-btn" data-id="${project.id}" aria-label="Ver código fonte de ${project.title}">Ver Código Fonte</button>
-            `;
-            projectsGrid.appendChild(card);
+    // ════════════════════════════════════════════════
+    // 2. SISTEMA DE LOADING
+    // ════════════════════════════════════════════════
+    const initLoadingScreen = () => {
+        const loadingScreen = document.getElementById('loading-screen');
+        const lines = document.querySelectorAll('.loading-lines .line');
+        const progressBar = document.getElementById('loading-bar');
+        
+        if (!loadingScreen) return;
+        
+        // Animação das linhas do terminal
+        lines.forEach(line => {
+            const delay = parseInt(line.getAttribute('data-delay') || '0');
+            setTimeout(() => {
+                line.classList.add('show');
+            }, delay);
         });
-        document.querySelectorAll('.card-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                openModal(e.currentTarget.getAttribute('data-id'), e.currentTarget);
+        
+        // Barra de progresso
+        setTimeout(() => {
+            if(progressBar) progressBar.style.width = '100%';
+        }, 100);
+        
+        // Ocultar overlay após a sequência
+        setTimeout(() => {
+            loadingScreen.classList.add('done');
+            document.body.style.overflow = 'auto'; // Reativar scroll
+            
+            // Iniciar animações iniciais de scroll reveal
+            setTimeout(() => {
+                const reveals = document.querySelectorAll('[data-reveal]');
+                reveals.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top < window.innerHeight) {
+                        el.classList.add('visible');
+                    }
+                });
+            }, 300);
+            
+        }, 2200);
+    };
+
+    // Bloquear scroll durante o loading
+    document.body.style.overflow = 'hidden';
+    initLoadingScreen();
+
+    // ════════════════════════════════════════════════
+    // 3. CURSOR CUSTOMIZADO
+    // ════════════════════════════════════════════════
+    const initCursor = () => {
+        const cursor = document.getElementById('cursor');
+        if (!cursor) return;
+
+        // Desativar em telas pequenas (touch)
+        if (window.innerWidth <= 768) {
+            cursor.style.display = 'none';
+            return;
+        }
+
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+        
+        // Suavização do cursor
+        const animate = () => {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+            requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.classList.remove('hidden');
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursor.classList.add('hidden');
+        });
+
+        document.addEventListener('mousedown', () => cursor.classList.add('clicking'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('clicking'));
+
+        // Efeitos de hover
+        const hoverElements = document.querySelectorAll('a, button, .card, .step-card, .comp-card');
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+        });
+    };
+    initCursor();
+
+    // ════════════════════════════════════════════════
+    // 4. RENDERIZAÇÃO DOS PROJETOS
+    // ════════════════════════════════════════════════
+    const renderProjects = () => {
+        const grid = document.getElementById('projects-grid');
+        if (!grid || typeof projectsData === 'undefined') return;
+
+        grid.innerHTML = projectsData.map((project, index) => {
+            const indexStr = String(index + 1).padStart(2, '0');
+            const delay = (index % 3) * 100;
+            
+            // Usando conceitos em vez de componentes para a tag principal do card se disponíveis
+            const conceptsHtml = (project.concepts || project.components.slice(0,3)).map(concept => 
+                `<span class="concept-tag">${concept}</span>`
+            ).join('');
+
+            return `
+                <article class="card" data-reveal="scale" style="--reveal-delay: ${delay}ms">
+                    <span class="project-number">${indexStr}</span>
+                    <div class="card-header">
+                        <h3 class="card-title">${project.title}</h3>
+                    </div>
+                    <div class="card-concepts">${conceptsHtml}</div>
+                    <p class="card-desc">${project.description}</p>
+                    <button class="card-btn view-code-btn" data-id="${project.id}" aria-label="Visualizar código do projeto ${project.title}">
+                        Ver Código-fonte
+                    </button>
+                </article>
+            `;
+        }).join('');
+    };
+    renderProjects();
+
+    // ════════════════════════════════════════════════
+    // 5. SISTEMA MODAL
+    // ════════════════════════════════════════════════
+    const initModal = () => {
+        const modal = document.getElementById('code-modal');
+        const closeBtn = document.getElementById('close-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalCode = document.getElementById('modal-code');
+        const modalDifficulty = document.getElementById('modal-difficulty');
+        const modalComponents = document.getElementById('modal-components');
+        const copyBtn = document.getElementById('copy-code-btn');
+        const copyBtnText = document.getElementById('copy-btn-text');
+        
+        let currentCode = '';
+
+        if (!modal) return;
+
+        const openModal = (projectId) => {
+            const project = projectsData.find(p => p.id === projectId);
+            if (!project) return;
+
+            currentCode = project.code;
+            modalTitle.textContent = project.title;
+            modalCode.innerHTML = highlightCode(project.code);
+            
+            // Setup meta data
+            modalDifficulty.textContent = project.difficulty === 1 ? 'Iniciante' : project.difficulty === 2 ? 'Intermediário' : 'Avançado';
+            modalDifficulty.setAttribute('data-level', project.difficulty);
+            
+            modalComponents.innerHTML = project.components.map(comp => `<li>${comp}</li>`).join('');
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // block scroll
+            
+            // Reset copy button
+            copyBtn.classList.remove('copied');
+            copyBtnText.textContent = 'Copiar';
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // restore scroll
+        };
+
+        // Event Listeners
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.view-code-btn')) {
+                const btn = e.target.closest('.view-code-btn');
+                openModal(btn.getAttribute('data-id'));
+            }
+        });
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+        });
+
+        // Copiar código
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(currentCode).then(() => {
+                copyBtn.classList.add('copied');
+                copyBtnText.textContent = 'Copiado!';
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtnText.textContent = 'Copiar';
+                }, 2000);
             });
         });
-    }
+    };
+    initModal();
 
-    // ========== MODAL ==========
-    function openModal(projectId, triggerElement) {
-        const project = projectsData.find(p => p.id === projectId);
-        if (!project) return;
-        activeTrigger = triggerElement;
-        currentRawCode = project.code;
-        modalTitle.textContent = project.title;
-        modalDifficulty.textContent = project.difficulty || '';
-        modalDifficulty.setAttribute('data-level', project.difficultyLevel || 1);
-        modalComponents.innerHTML = '';
-        (project.components || []).forEach(comp => {
-            const li = document.createElement('li');
-            li.textContent = comp;
-            modalComponents.appendChild(li);
-        });
-        modalCode.innerHTML = highlightCode(project.code);
-        copyBtnText.textContent = 'Copiar';
-        copyCodeBtn.classList.remove('copied');
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        closeModalBtn.focus();
-        trapFocus(modal.querySelector('.modal-content'));
-    }
+    // ════════════════════════════════════════════════
+    // 6. SCROLL E NAVEGAÇÃO
+    // ════════════════════════════════════════════════
+    const initScrollFeatures = () => {
+        const nav = document.getElementById('site-nav');
+        const progressBar = document.getElementById('scroll-progress');
+        const backToTop = document.getElementById('back-to-top');
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-links .nav-link');
+        const circuitDividers = document.querySelectorAll('.circuit-divider');
 
-    function closeModal() {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-        if (focusTrapHandler) {
-            modal.querySelector('.modal-content').removeEventListener('keydown', focusTrapHandler);
-            focusTrapHandler = null;
-        }
-        if (activeTrigger) { activeTrigger.focus(); activeTrigger = null; }
-    }
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            
+            // Navbar glassmorphism
+            if (scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
 
-    closeModalBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('active')) closeModal(); });
+            // Barra de progresso
+            if (progressBar && docHeight > 0) {
+                const progress = (scrollY / docHeight) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
 
-    // ========== COPY CODE ==========
-    function copyCode() {
-        navigator.clipboard.writeText(currentRawCode).then(() => {
-            showCopied();
-        }).catch(() => {
-            const ta = document.createElement('textarea');
-            ta.value = currentRawCode;
-            ta.style.cssText = 'position:fixed;opacity:0';
-            document.body.appendChild(ta);
-            ta.select();
-            try { document.execCommand('copy'); showCopied(); } catch (_) {}
-            document.body.removeChild(ta);
-        });
-    }
-    function showCopied() {
-        copyBtnText.textContent = 'Copiado! ✓';
-        copyCodeBtn.classList.add('copied');
-        setTimeout(() => { copyBtnText.textContent = 'Copiar'; copyCodeBtn.classList.remove('copied'); }, 2000);
-    }
-    copyCodeBtn.addEventListener('click', copyCode);
+            // Back to top
+            if (backToTop) {
+                if (scrollY > 500) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            }
 
-    // ========== FOCUS TRAP ==========
-    function trapFocus(el) {
-        const sel = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
-        focusTrapHandler = function(e) {
-            if (e.key !== 'Tab') return;
-            const focusable = el.querySelectorAll(sel);
-            if (!focusable.length) return;
-            const first = focusable[0], last = focusable[focusable.length - 1];
-            if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-            else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
-        };
-        el.addEventListener('keydown', focusTrapHandler);
-    }
-
-    // ========== SYNTAX HIGHLIGHTING ==========
-    function highlightCode(raw) {
-        let code = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const ph = [];
-        function hold(m, cls) { const i = ph.length; ph.push(`<span class="${cls}">${m}</span>`); return `\x00PH${i}\x00`; }
-        code = code.replace(/\/\*[\s\S]*?\*\//g, m => hold(m,'token-comment'));
-        code = code.replace(/\/\/.*$/gm, m => hold(m,'token-comment'));
-        code = code.replace(/"(?:[^"\\]|\\.)*"/g, m => hold(m,'token-string'));
-        code = code.replace(/'(?:[^'\\]|\\.)*'/g, m => hold(m,'token-string'));
-        code = code.replace(/(&lt;[A-Za-z_][\w.]*&gt;)/g, m => hold(m,'token-string'));
-        code = code.replace(/^(\s*#\s*(?:define|include|ifdef|ifndef|endif|pragma|if|else|elif|undef))/gm, m => hold(m,'token-directive'));
-        const kw = ['int','void','long','float','double','char','bool','byte','unsigned','signed','if','else','for','while','do','switch','case','break','continue','return','const','static','sizeof','struct','class','enum','typedef','true','false','HIGH','LOW','INPUT','OUTPUT','boolean','String'];
-        code = code.replace(new RegExp('\\b('+kw.join('|')+')\\b','g'), '<span class="token-keyword">$1</span>');
-        code = code.replace(/\b(0x[\da-fA-F]+|\d+\.?\d*[fFuUlL]*)\b/g, '<span class="token-number">$1</span>');
-        code = code.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, (m, name) => kw.includes(name) ? m : `<span class="token-function">${name}</span>`);
-        code = code.replace(/\x00PH(\d+)\x00/g, (_, i) => ph[parseInt(i)]);
-        return code;
-    }
-
-    // ========== NAV ==========
-    function initNav() {
-        const btn = document.getElementById('nav-menu-btn');
-        const links = document.getElementById('nav-links');
-        btn.addEventListener('click', () => {
-            const isOpen = links.classList.toggle('open');
-            btn.setAttribute('aria-expanded', isOpen);
-            btn.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu de navegação');
-        });
-        links.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => { links.classList.remove('open'); btn.setAttribute('aria-expanded','false'); });
-        });
-        // Active link via Intersection Observer
-        const sections = document.querySelectorAll('section[id]');
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                    const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
-                    if (active) active.classList.add('active');
+            // Active links
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
                 }
             });
-        }, { threshold: 0.3 });
-        sections.forEach(s => observer.observe(s));
-    }
 
-    // ========== SIMULATION ==========
-    function initSimulation() {
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Desenhar SVG do circuit divider
+            circuitDividers.forEach(divider => {
+                const rect = divider.getBoundingClientRect();
+                if(rect.top < window.innerHeight && rect.bottom > 0) {
+                    divider.classList.add('drawn');
+                }
+            });
+        });
+
+        // Voltar ao topo click
+        if (backToTop) {
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+        
+        // Menu mobile
+        const menuBtn = document.getElementById('nav-menu-btn');
+        const navLinksContainer = document.getElementById('nav-links');
+        
+        if (menuBtn && navLinksContainer) {
+            menuBtn.addEventListener('click', () => {
+                const isOpen = navLinksContainer.classList.contains('open');
+                navLinksContainer.classList.toggle('open');
+                menuBtn.setAttribute('aria-expanded', !isOpen);
+                menuBtn.textContent = isOpen ? '☰' : '✕';
+            });
+            
+            // Fechar ao clicar num link
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinksContainer.classList.remove('open');
+                    menuBtn.setAttribute('aria-expanded', 'false');
+                    menuBtn.textContent = '☰';
+                });
+            });
+        }
+    };
+    initScrollFeatures();
+
+    // ════════════════════════════════════════════════
+    // 7. OBSERVER DE REVEAL (Animações de entrada)
+    // ════════════════════════════════════════════════
+    const initScrollReveal = () => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // Opcional: observer.unobserve(entry.target) para animar só uma vez
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+    };
+    initScrollReveal();
+
+    // ════════════════════════════════════════════════
+    // 8. EFEITO TYPEWRITER
+    // ════════════════════════════════════════════════
+    const initTypewriter = () => {
+        const textElement = document.getElementById('typewriter-text');
+        if (!textElement) return;
+
+        const words = ['Criar.', 'Automatizar.', 'Inovar.', 'Conectar.', 'Controlar.'];
+        let wordIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        
+        // Delay inicial para dar tempo da loading screen sair
+        setTimeout(() => {
+            type();
+        }, 2500);
+
+        function type() {
+            const currentWord = words[wordIndex];
+            
+            if (isDeleting) {
+                textElement.textContent = currentWord.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                textElement.textContent = currentWord.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 120;
+
+            if (!isDeleting && charIndex === currentWord.length) {
+                typeSpeed = 2000; // Pausa no final da palavra
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                wordIndex = (wordIndex + 1) % words.length;
+                typeSpeed = 500; // Pausa antes da próxima palavra
+            }
+
+            setTimeout(type, typeSpeed);
+        }
+    };
+    initTypewriter();
+
+    // ════════════════════════════════════════════════
+    // 9. BACKGROUND DE CONSTELAÇÃO
+    // ════════════════════════════════════════════════
+    const initConstellation = () => {
+        const canvas = document.getElementById('constellation-bg');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        
+        // Usar prefers-reduced-motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            canvas.style.display = 'none';
+            return;
+        }
+
+        const resize = () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initParticles();
+        };
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.radius = Math.random() * 1.5 + 0.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.4)';
+                ctx.fill();
+            }
+        }
+
+        const initParticles = () => {
+            particles = [];
+            const count = Math.min(Math.floor((width * height) / 15000), 100);
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        };
+
+        const drawLines = () => {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${0.1 - (dist / 120) * 0.1})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        };
+
+        const animate = () => {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            drawLines();
+            requestAnimationFrame(animate);
+        };
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    };
+    initConstellation();
+    
+    // ════════════════════════════════════════════════
+    // 10. DIGITAL RAIN (MATRIX) PARA SEÇÃO FUTURO
+    // ════════════════════════════════════════════════
+    const initDigitalRain = () => {
+        const canvas = document.getElementById('digital-rain');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const section = canvas.parentElement;
+        
+        // Usar prefers-reduced-motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            canvas.style.display = 'none';
+            return;
+        }
+
+        let width, height;
+        let columns;
+        let drops = [];
+        const chars = "01".split("");
+
+        const resize = () => {
+            const rect = section.getBoundingClientRect();
+            width = rect.width;
+            height = rect.height;
+            canvas.width = width;
+            canvas.height = height;
+            
+            const fontSize = 14;
+            columns = width / fontSize;
+            drops = [];
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1;
+            }
+        };
+
+        const draw = () => {
+            // Fundo translúcido para criar rastro
+            ctx.fillStyle = "rgba(5, 5, 9, 0.05)";
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.fillStyle = "rgba(0, 212, 255, 0.3)";
+            ctx.font = "14px monospace";
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * 14, drops[i] * 14);
+                
+                if (drops[i] * 14 > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        };
+
+        window.addEventListener('resize', resize);
+        resize();
+        
+        // Só animar quando visível
+        let rainInterval;
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    if(!rainInterval) rainInterval = setInterval(draw, 50);
+                } else {
+                    clearInterval(rainInterval);
+                    rainInterval = null;
+                }
+            });
+        });
+        observer.observe(section);
+    };
+    initDigitalRain();
+
+    // ════════════════════════════════════════════════
+    // 11. SIMULAÇÃO DOS LEDS
+    // ════════════════════════════════════════════════
+    const initSimulation = () => {
+        const startBtn = document.getElementById('sim-start');
+        const stopBtn = document.getElementById('sim-stop');
+        const statusEl = document.getElementById('sim-status');
+        const speedRange = document.getElementById('sim-speed-range');
+        const speedValue = document.getElementById('sim-speed-value');
+        const codeDisplay = document.getElementById('sim-code-display');
+        
+        let simInterval;
+        let currentLed = 1;
+        let isRunning = false;
+        
+        // Encontrar o código do PISCANTE no data.js, fallback se não achar
+        let piscanteCode = `void setup() {
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+}
+void loop() {
+  digitalWrite(8, HIGH); delay(500);
+  digitalWrite(8, LOW);
+  digitalWrite(9, HIGH); delay(500);
+  digitalWrite(9, LOW);
+  digitalWrite(10, HIGH); delay(500);
+  digitalWrite(10, LOW);
+  digitalWrite(11, HIGH); delay(500);
+  digitalWrite(11, LOW);
+}`;
+        if(typeof projectsData !== 'undefined') {
+            const p = projectsData.find(p => p.title.toLowerCase().includes('piscante'));
+            if(p) piscanteCode = p.code;
+        }
+        
+        if (codeDisplay) {
+            codeDisplay.innerHTML = highlightCode(piscanteCode);
+        }
+
         const leds = [
             document.getElementById('sim-led-1'),
             document.getElementById('sim-led-2'),
             document.getElementById('sim-led-3'),
             document.getElementById('sim-led-4')
-        ];
-        const startBtn = document.getElementById('sim-start');
-        const stopBtn = document.getElementById('sim-stop');
-        const speedRange = document.getElementById('sim-speed-range');
-        const speedLabel = document.getElementById('sim-speed-value');
-        const status = document.getElementById('sim-status');
-        const codeDisplay = document.getElementById('sim-code-display');
+        ].filter(Boolean); // Remover nulos caso existam
 
-        let interval = null, currentStep = 0, speed = 500;
+        const resetLeds = () => {
+            leds.forEach(led => {
+                led.classList.remove('sim-led--on');
+                led.style.setProperty('--led-glow', 'transparent');
+            });
+        };
 
-        const piscanteProject = projectsData.find(p => p.id === 'piscante');
-        if (piscanteProject && codeDisplay) codeDisplay.textContent = piscanteProject.code;
+        const step = () => {
+            resetLeds();
+            const activeLed = leds[currentLed - 1];
+            if(activeLed) {
+                const color = activeLed.getAttribute('data-color');
+                activeLed.classList.add('sim-led--on');
+                activeLed.style.setProperty('--led-glow', color);
+                statusEl.innerHTML = `LIGADO: <span style="color:${color}">LED A${currentLed}</span>`;
+            }
+            currentLed = currentLed >= leds.length ? 1 : currentLed + 1;
+        };
 
-        function turnOffAll() { leds.forEach(led => { led.classList.remove('sim-led--on'); led.style.removeProperty('--led-glow'); }); }
-        function activateLed(i) {
-            turnOffAll();
-            const led = leds[i];
-            led.classList.add('sim-led--on');
-            led.style.setProperty('--led-glow', led.dataset.color);
-            status.textContent = `LED ${i+1} (A${i+1}) ligado`;
+        const startSim = () => {
+            if (isRunning) return;
+            isRunning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            const speed = parseInt(speedRange.value);
+            step(); // executa imediato
+            simInterval = setInterval(step, speed);
+        };
+
+        const stopSim = () => {
+            if (!isRunning) return;
+            isRunning = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            clearInterval(simInterval);
+            resetLeds();
+            statusEl.textContent = 'Simulação pausada';
+            currentLed = 1;
+        };
+
+        const updateSpeed = () => {
+            speedValue.textContent = `${speedRange.value}ms`;
+            if (isRunning) {
+                clearInterval(simInterval);
+                simInterval = setInterval(step, parseInt(speedRange.value));
+            }
+        };
+
+        if (startBtn && stopBtn && speedRange) {
+            startBtn.addEventListener('click', startSim);
+            stopBtn.addEventListener('click', stopSim);
+            speedRange.addEventListener('input', updateSpeed);
         }
-        function tick() { activateLed(currentStep); currentStep = (currentStep + 1) % leds.length; }
-        function startSim() {
-            if (interval) return;
-            tick();
-            interval = setInterval(tick, speed);
-            startBtn.disabled = true; stopBtn.disabled = false;
-            status.textContent = 'Simulação em execução...';
-        }
-        function stopSim() {
-            clearInterval(interval); interval = null; turnOffAll(); currentStep = 0;
-            startBtn.disabled = false; stopBtn.disabled = true;
-            status.textContent = 'Simulação pausada';
-        }
-        startBtn.addEventListener('click', startSim);
-        stopBtn.addEventListener('click', stopSim);
-        speedRange.addEventListener('input', () => {
-            speed = parseInt(speedRange.value);
-            speedLabel.textContent = `${speed}ms`;
-            if (interval) { clearInterval(interval); interval = setInterval(tick, speed); }
+        
+        // Destacar código pre-carregado
+        const preElements = document.querySelectorAll('.lang-code-block code');
+        preElements.forEach(block => {
+            const code = block.textContent;
+            block.innerHTML = highlightCode(code);
         });
-    }
-
-    // ========== STEP CARDS ANIMATION ==========
-    function initStepAnimations() {
-        const cards = document.querySelectorAll('.step-card');
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.3 });
-        cards.forEach((card, i) => { card.style.animationDelay = `${i * 100}ms`; observer.observe(card); });
-    }
-
-    // ========== DIGITAL RAIN (FUTURE SECTION BG) ==========
-    function initDigitalRain() {
-        const canvas = document.getElementById('digital-rain');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const section = canvas.closest('.section-future');
-        let animId = null;
-        let columns = [];
-        const chars = '01アイウエオカキクケコ{}[]<>/=+;:';
-        const fontSize = 13;
-        let isVisible = false;
-
-        function resize() {
-            canvas.width = section.offsetWidth;
-            canvas.height = section.offsetHeight;
-            const cols = Math.floor(canvas.width / fontSize);
-            columns = Array.from({ length: cols }, () => Math.random() * canvas.height / fontSize | 0);
-        }
-        resize();
-        window.addEventListener('resize', resize);
-
-        function draw() {
-            ctx.fillStyle = 'rgba(13, 17, 23, 0.15)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 229, 255, 0.7)';
-            ctx.font = `${fontSize}px monospace`;
-            for (let i = 0; i < columns.length; i++) {
-                const char = chars[Math.random() * chars.length | 0];
-                const x = i * fontSize;
-                const y = columns[i] * fontSize;
-                ctx.fillStyle = `rgba(0, 229, 255, ${0.3 + Math.random() * 0.5})`;
-                ctx.fillText(char, x, y);
-                if (y > canvas.height && Math.random() > 0.975) columns[i] = 0;
-                columns[i]++;
-            }
-            if (isVisible) animId = requestAnimationFrame(draw);
-        }
-
-        const obs = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                isVisible = entry.isIntersecting;
-                if (isVisible && !animId) draw();
-                else if (!isVisible && animId) { cancelAnimationFrame(animId); animId = null; }
-            });
-        }, { threshold: 0.1 });
-        obs.observe(section);
-    }
-
-    // ========== INIT ==========
-    renderProjects();
-    initNav();
-    initSimulation();
-    initStepAnimations();
-    initDigitalRain();
-});
-
-// ================================================================
-// CONSTELLATION BACKGROUND — runs independently
-// ================================================================
-(function () {
-    const canvas = document.getElementById('constellation-bg');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    // ---------- CONFIG ----------
-    const CFG = {
-        particleCount: 120,
-        linkDistance: 140,
-        linkOpacity: 0.18,
-        mouseRadius: 180,
-        mouseLinkOpacity: 0.35,
-        speed: 0.3,
-        minSize: 1,
-        maxSize: 2.8,
-        colors: [
-            'rgba(0,229,255,',   // cyan
-            'rgba(100,200,255,', // light blue
-            'rgba(200,220,255,', // white-blue
-            'rgba(255,255,255,', // white
-        ],
-        glowColors: [
-            'rgba(0,229,255,0.15)',
-            'rgba(100,200,255,0.10)',
-        ]
     };
-
-    let W, H;
-    let particles = [];
-    let mouse = { x: -9999, y: -9999 };
-    let animId;
-
-    // ---------- RESIZE ----------
-    function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    // ---------- MOUSE ----------
-    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-    window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
-
-    // Allow clicks to pass through
-    canvas.style.pointerEvents = 'none';
-
-    // ---------- PARTICLE ----------
-    class Particle {
-        constructor() {
-            this.reset();
-        }
-        reset() {
-            this.x = Math.random() * W;
-            this.y = Math.random() * H;
-            this.vx = (Math.random() - 0.5) * CFG.speed;
-            this.vy = (Math.random() - 0.5) * CFG.speed;
-            this.size = CFG.minSize + Math.random() * (CFG.maxSize - CFG.minSize);
-            this.colorIdx = Math.random() * CFG.colors.length | 0;
-            this.baseAlpha = 0.4 + Math.random() * 0.6;
-            this.pulse = Math.random() * Math.PI * 2; // phase offset
-        }
-        update() {
-            this.pulse += 0.015;
-            const alpha = this.baseAlpha + Math.sin(this.pulse) * 0.15;
-            this.currentAlpha = Math.max(0.2, Math.min(1, alpha));
-
-            this.x += this.vx;
-            this.y += this.vy;
-
-            // Mouse repulsion
-            const dx = this.x - mouse.x;
-            const dy = this.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < CFG.mouseRadius && dist > 0) {
-                const force = (CFG.mouseRadius - dist) / CFG.mouseRadius * 0.015;
-                this.vx += (dx / dist) * force;
-                this.vy += (dy / dist) * force;
-            }
-
-            // Speed damping
-            this.vx *= 0.999;
-            this.vy *= 0.999;
-
-            // Wrap edges
-            if (this.x < -10) this.x = W + 10;
-            if (this.x > W + 10) this.x = -10;
-            if (this.y < -10) this.y = H + 10;
-            if (this.y > H + 10) this.y = -10;
-        }
-        draw() {
-            const col = CFG.colors[this.colorIdx];
-
-            // Glow
-            if (this.size > 1.8) {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-                ctx.fillStyle = CFG.glowColors[this.colorIdx % CFG.glowColors.length];
-                ctx.fill();
-            }
-
-            // Core dot
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = col + this.currentAlpha + ')';
-            ctx.fill();
-        }
-    }
-
-    // ---------- INIT PARTICLES ----------
-    function initParticles() {
-        particles = [];
-        for (let i = 0; i < CFG.particleCount; i++) {
-            particles.push(new Particle());
-        }
-    }
-    initParticles();
-
-    // ---------- DRAW LINKS ----------
-    function drawLinks() {
-        for (let i = 0; i < particles.length; i++) {
-            const a = particles[i];
-
-            // Links between particles
-            for (let j = i + 1; j < particles.length; j++) {
-                const b = particles[j];
-                const dx = a.x - b.x;
-                const dy = a.y - b.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < CFG.linkDistance) {
-                    const opacity = (1 - dist / CFG.linkDistance) * CFG.linkOpacity;
-                    ctx.beginPath();
-                    ctx.moveTo(a.x, a.y);
-                    ctx.lineTo(b.x, b.y);
-                    ctx.strokeStyle = `rgba(0,229,255,${opacity})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
-                }
-            }
-
-            // Links to mouse
-            const mdx = a.x - mouse.x;
-            const mdy = a.y - mouse.y;
-            const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-            if (mDist < CFG.mouseRadius) {
-                const opacity = (1 - mDist / CFG.mouseRadius) * CFG.mouseLinkOpacity;
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(mouse.x, mouse.y);
-                ctx.strokeStyle = `rgba(0,229,255,${opacity})`;
-                ctx.lineWidth = 0.8;
-                ctx.stroke();
-            }
-        }
-    }
-
-    // ---------- LOOP ----------
-    function loop() {
-        ctx.clearRect(0, 0, W, H);
-
-        for (const p of particles) {
-            p.update();
-            p.draw();
-        }
-
-        drawLinks();
-
-        // Mouse cursor glow
-        if (mouse.x > 0 && mouse.y > 0) {
-            const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, CFG.mouseRadius * 0.6);
-            grad.addColorStop(0, 'rgba(0,229,255,0.06)');
-            grad.addColorStop(1, 'rgba(0,229,255,0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(mouse.x - CFG.mouseRadius, mouse.y - CFG.mouseRadius, CFG.mouseRadius * 2, CFG.mouseRadius * 2);
-        }
-
-        animId = requestAnimationFrame(loop);
-    }
-    loop();
-
-    // Respect reduced motion
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        cancelAnimationFrame(animId);
-        // Draw a single static frame
-        for (const p of particles) { p.update(); p.draw(); }
-        drawLinks();
-    }
-})();
+    initSimulation();
+    
+    // ════════════════════════════════════════════════
+    // 12. PARALLAX NA HERO (Tilt 3D)
+    // ════════════════════════════════════════════════
+    const initParallax = () => {
+        const visual = document.getElementById('hero-visual-wrapper');
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        
+        if (!visual || prefersReducedMotion || window.innerWidth <= 768) return;
+        
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.clientX) / 25;
+            const y = (window.innerHeight / 2 - e.clientY) / 25;
+            
+            visual.style.transform = `perspective(1000px) rotateY(${x}deg) rotateX(${-y}deg)`;
+            visual.style.transition = 'transform 0.1s ease-out';
+        });
+        
+        document.addEventListener('mouseleave', () => {
+            visual.style.transform = 'perspective(1000px) rotateY(0) rotateX(0)';
+            visual.style.transition = 'transform 0.5s ease-out';
+        });
+    };
+    initParallax();
+});
