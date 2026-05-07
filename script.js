@@ -92,6 +92,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (bootScreen && bootLines && bootBar && bootPct) {
+            if (sessionStorage.getItem('booted') === 'true') {
+                bootScreen.style.display = 'none';
+                if (typeText) typeText.textContent = "A imaginação ganha vida com código.";
+                if (subtitle) {
+                    subtitle.style.opacity = '1';
+                    subtitle.style.transition = 'none';
+                }
+                return;
+            }
+
             const messages = [
                 "avr-gcc: compiling sketch...",
                 "avr-g++: compiling core...",
@@ -125,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 if (progress === 100) {
+                    sessionStorage.setItem('booted', 'true');
                     clearInterval(interval);
                     setTimeout(() => {
                         bootScreen.style.opacity = '0';
@@ -140,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fallback de segurança
             setTimeout(() => {
                 if (bootScreen.style.display !== 'none') {
+                    sessionStorage.setItem('booted', 'true');
                     bootScreen.style.display = 'none';
                     startTypewriter();
                 }
@@ -585,6 +597,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const filtered = filter === 'all' 
                 ? window.projects 
                 : window.projects.filter(p => p.difficulty.toLowerCase() === filter);
+                
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="no-results">&gt; ERRO 404: NENHUM PROJETO ENCONTRADO_<br>Verifique a conexão com a protoboard e tente novamente.</div>';
+                return;
+            }
                 
             grid.innerHTML = filtered.map((proj, index) => {
                 const delay = (index % 3) * 100;

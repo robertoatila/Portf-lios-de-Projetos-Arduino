@@ -22,7 +22,7 @@
   
   /* Fonts */
   --font-display: 'Chakra Petch', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   
   /* Sombras Ultra Neon */
@@ -142,11 +142,22 @@ h2 {
   font-size: clamp(2rem, 4vw, 3.5rem);
   margin-bottom: 2rem;
   position: relative;
-  transition: letter-spacing var(--t-spring);
+  display: inline-block;
 }
 
-section:hover h2 {
-  letter-spacing: 2px;
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--neon-cyan);
+  transition: width var(--t-spring);
+}
+
+section:hover h2::after {
+  width: 56px;
 }
 
 h3 {
@@ -1262,6 +1273,29 @@ input[type=range]::-webkit-slider-runnable-track {
   box-shadow: var(--shadow-neon-cyan);
 }
 
+.no-results {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  text-align: center;
+  color: var(--neon-cyan);
+  border: 1px dashed var(--neon-cyan);
+  background: rgba(0, 243, 255, 0.05);
+  padding: 3rem;
+  border-radius: 8px;
+  animation: fadeInRise 0.5s ease forwards;
+}
+
+@keyframes fadeInRise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ==========================================================================
    17. SOBRE
    ========================================================================== */
@@ -1384,12 +1418,14 @@ input[type=range]::-webkit-slider-runnable-track {
   box-shadow: var(--shadow-glass);
   display: flex;
   flex-direction: column;
-  transform: translateY(20px);
-  transition: transform var(--t-spring);
+  transform: scale(0.96) translateY(10px);
+  opacity: 0;
+  transition: transform var(--t-spring), opacity var(--t-spring);
 }
 
 .modal-overlay.active .modal-content {
-  transform: translateY(0);
+  transform: scale(1) translateY(0);
+  opacity: 1;
 }
 
 .modal-header {
@@ -1549,6 +1585,18 @@ input[type=range]::-webkit-slider-runnable-track {
 
 .circuit-divider.is-visible .circuit-node {
   opacity: 1;
+}
+
+.circuit-divider.v2 .circuit-node {
+  fill: var(--neon-purple);
+}
+
+.circuit-divider.v2 .circuit-path {
+  stroke: var(--neon-purple);
+}
+
+.circuit-divider.v3 {
+  transform: scaleX(-1);
 }
 
 /* Back to Top */
