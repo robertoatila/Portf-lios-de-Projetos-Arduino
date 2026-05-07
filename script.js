@@ -607,24 +607,61 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // 9. RENDER PROJECTS & MODAL
+    // 9. HARDWARE MONITOR LOGIC
+    const initHardwareMonitor = () => {
+        const cpuBar = document.getElementById('hw-cpu');
+        const tempBar = document.getElementById('hw-temp');
+        const cpuVal = cpuBar?.parentElement?.nextElementSibling;
+        const tempVal = tempBar?.parentElement?.nextElementSibling;
+
+        if (!cpuBar || !tempBar) return;
+
+        const updateStats = () => {
+            const cpu = Math.floor(Math.random() * 30) + 5;
+            const temp = Math.floor(Math.random() * 15) + 35;
+
+            cpuBar.style.width = `${cpu}%`;
+            tempBar.style.width = `${temp}%`;
+
+            if (cpuVal) cpuVal.textContent = `${cpu}%`;
+            if (tempVal) tempVal.textContent = `${temp}°C`;
+
+            setTimeout(updateStats, Math.random() * 2000 + 1000);
+        };
+
+        updateStats();
+    };
+
+    // 10. RENDER PROJECTS & MODAL
     const initProjectsAndModal = () => {
         const grid = document.getElementById('projects-grid');
         const modal = document.getElementById('code-modal');
         const closeModalBtn = document.getElementById('close-modal');
         const copyBtn = document.getElementById('copy-code-btn');
         const copyText = document.getElementById('copy-btn-text');
+        const searchInput = document.getElementById('project-search');
         
+        let currentFilter = 'all';
+        let searchQuery = '';
+
         // Renderizar projetos
-        const renderProjects = (filter = 'all') => {
+        const renderProjects = () => {
             if (!grid || !window.projects) return;
             
-            const filtered = filter === 'all' 
-                ? window.projects 
-                : window.projects.filter(p => p.difficulty.toLowerCase() === filter);
+            const filtered = window.projects.filter(p => {
+                const matchesFilter = currentFilter === 'all' || p.difficulty.toLowerCase() === currentFilter;
+                const matchesSearch = p.title.toLowerCase().includes(searchQuery) || 
+                                     p.description.toLowerCase().includes(searchQuery) ||
+                                     p.components.some(c => c.toLowerCase().includes(searchQuery));
+                return matchesFilter && matchesSearch;
+            });
                 
             if (filtered.length === 0) {
-                grid.innerHTML = '<div class="no-results">&gt; ERRO 404: NENHUM PROJETO ENCONTRADO_<br>Verifique a conexão com a protoboard e tente novamente.</div>';
+                grid.innerHTML = `<div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-family: var(--font-mono);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">404</div>
+                    &gt; ERRO: NENHUM PROJETO ENCONTRADO PARA "${searchQuery.toUpperCase()}"_<br>
+                    Verifique os filtros ou tente outra busca.
+                </div>`;
                 return;
             }
                 
@@ -634,10 +671,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const chips = proj.components.map(c => `<span class="comp-chip">${c}</span>`).join('');
                 
+                // Highlight search term
+                let title = proj.title;
+                if (searchQuery) {
+                    const regex = new RegExp(`(${searchQuery})`, 'gi');
+                    title = title.replace(regex, '<mark class="search-highlight">$1</mark>');
+                }
+
                 return `
                 <article class="project-card" data-reveal style="--reveal-delay: ${delay}ms">
-                    <span class="project-number">#${String(index + 1).padStart(2, '0')}</span>
-                    <h3 class="project-title">${proj.title}</h3>
+                    <span class="project-number">#${String(proj.id).padStart(2, '0')}</span>
+                    <h3 class="project-title">${title}</h3>
                     <p class="project-desc">${proj.description}</p>
                     <div class="project-components">
                         ${chips}
@@ -663,14 +707,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.addEventListener('click', () => {
                     filterBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
                     
                     grid.style.opacity = '0';
                     setTimeout(() => {
-                        renderProjects(btn.dataset.filter);
+                        renderProjects();
                         grid.style.opacity = '1';
                     }, 300);
                 });
             });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', debounce((e) => {
+                    searchQuery = e.target.value.toLowerCase().trim();
+                    renderProjects();
+                }, 300));
+            }
         }
 
         if (!modal) return;
@@ -805,5 +857,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initConstellation();
     initDigitalRain();
     initSimulation();
+    initHardwareMonitor();
     initProjectsAndModal();
 });

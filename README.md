@@ -27,16 +27,15 @@ O maior desafio técnico deste projeto foi garantir uma **performance extrema** 
 
 ## ✨ Principais Funcionalidades e Arquitetura
 
-- **Estética Maker/Cyberpunk:** Paleta de cores dark neon (`#0a0e17`, cyan e purple), utilizando fontes modernas (`Chakra Petch`, `JetBrains Mono`).
+- **Estética Maker/Cyberpunk:** Paleta de cores dark neon (`#0a0e17`, cyan e purple), utilizando fontes modernas (`Chakra Petch`, `DM Sans`, `JetBrains Mono`).
+- **Hardware Monitor Real-time (Simulado):** Painel interativo que exibe estatísticas em tempo real da "CPU", "Temperatura" e "Memória" da placa Arduino virtual.
+- **Busca Global Instantânea:** Campo de busca com filtro dinâmico que permite encontrar projetos por nome ou componentes instantaneamente.
 - **Boot Screen Autêntico:** O site inicia com a icônica logo do infinito do Arduino e renderiza no terminal um log de compilação real (`avr-gcc: compiling...`, `avrdude: uploading...`) antes de revelar o conteúdo.
 - **Simulador Interativo Dinâmico:** Um simulador construído em JS que carrega projetos de `data.js`, aplica cores aos LEDs virtuais, e permite controle de velocidade (ms). Inclui um botão para cópia instantânea de código (`Clipboard API`).
-- **Syntax Highlighter com Line Numbers:** Formatador de código C++/Arduino feito do zero em JS puro utilizando expressões regulares protegidas (para não quebrar strings). O código é renderizado no modal simulando uma IDE real com **números de linha nativos (CSS Counters)**.
-- **Navegação com Deep Linking:** Cada projeto possui uma URL única (ex: `#projeto-piscante`). O portfólio escuta a URL no carregamento da página e abre automaticamente o modal do projeto caso o link seja compartilhado.
-- **Acessibilidade - Focus Trap Avançado:** O modal de projetos foi desenhado com um sistema de `Focus Trap` em JS, prendendo o foco da tecla `Tab` nos botões internos do modal para leitores de tela e devolvendo o foco ao elemento original ao fechar.
+- **Syntax Highlighter com Line Numbers:** Formatador de código C++/Arduino feito do zero em JS puro. O código é renderizado no modal simulando uma IDE real com **números de linha nativos (CSS Counters)**.
+- **Acessibilidade - Focus Trap Avançado:** O modal de projetos foi desenhado com um sistema de `Focus Trap` em JS, prendendo o foco da tecla `Tab` nos botões internos do modal.
 - **Otimização de Renderização (CPU/GPU):** 
   - Animações em Canvas (Chuva Digital e Constelação) contam com `IntersectionObserver` para pausar os cálculos matemáticos quando fora de tela.
-  - O redimensionamento do Canvas utiliza a técnica de **Debounce** para evitar lag ao dar *resize* na tela.
-  - Carregamento assíncrono garantido com o atributo `defer` nos scripts principais.
 
 ## ⚙️ Como Executar Localmente
 
@@ -48,7 +47,7 @@ Como o projeto é livre de dependências, visualizá-lo localmente é tão simpl
    ```
 2. Abra a pasta do projeto.
 3. Dê um duplo-clique no arquivo `index.html`.
-4. *Pronto!* A magia acontece direto no seu navegador. *(Nota: Por limitações de segurança CORS de navegadores, abrir localmente via `file:///` pode acusar erros ao ler o `manifest.json`. Para 100% de suporte, abra via `Live Server` no VS Code).*
+4. *Pronto!* A magia acontece direto no seu navegador. *(Nota: Para 100% de suporte às fontes e PWA, recomenda-se abrir via `Live Server` no VS Code).*
 
 ## 👨‍💻 Autor
 

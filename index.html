@@ -254,6 +254,30 @@
                     <circle cx="360" cy="310" r="2.5" fill="#44ff88" opacity="0.8" />
                     <text x="360" y="322" fill="#44ff88" font-family="var(--font-mono)" font-size="5" text-anchor="middle">ON</text>
                 </svg>
+
+                <!-- NOVO: Hardware Monitor Panel -->
+                <div class="hw-monitor" data-reveal style="--reveal-delay: 800ms">
+                    <div class="hw-header">
+                        <span class="hw-title">SYSTEM MONITOR</span>
+                        <span class="hw-status pulse">ONLINE</span>
+                    </div>
+                    <div class="hw-body">
+                        <div class="hw-stat">
+                            <span class="hw-label">CPU LOAD</span>
+                            <div class="hw-bar-bg"><div class="hw-bar" id="hw-cpu" style="width: 12%"></div></div>
+                            <span class="hw-val">12%</span>
+                        </div>
+                        <div class="hw-stat">
+                            <span class="hw-label">TEMP</span>
+                            <div class="hw-bar-bg"><div class="hw-bar" id="hw-temp" style="width: 42%; background: var(--neon-purple)"></div></div>
+                            <span class="hw-val">42°C</span>
+                        </div>
+                        <div class="hw-stat">
+                            <span class="hw-label">SRAM</span>
+                            <span class="hw-val">2048 Bytes</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -906,11 +930,22 @@
                     <h2 class="section-title" id="projects-heading">Meus <span class="highlight">Projetos</span></h2>
                 </div>
                 
-                <div class="projects-filter" id="projects-filter" data-reveal="scale" style="--reveal-delay: 100ms">
-                    <button class="filter-btn active" data-filter="all">Todos</button>
-                    <button class="filter-btn" data-filter="iniciante">Iniciante</button>
-                    <button class="filter-btn" data-filter="intermediário">Intermediário</button>
-                    <button class="filter-btn" data-filter="avançado">Avançado</button>
+                <div class="projects-filter-wrapper" data-reveal="scale" style="--reveal-delay: 100ms">
+                    <div class="projects-filter" id="projects-filter">
+                        <button class="filter-btn active" data-filter="all">Todos</button>
+                        <button class="filter-btn" data-filter="iniciante">Iniciante</button>
+                        <button class="filter-btn" data-filter="intermediário">Intermediário</button>
+                        <button class="filter-btn" data-filter="avançado">Avançado</button>
+                    </div>
+
+                    <!-- NOVO: Global Search -->
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="project-search" placeholder="Buscar projeto ou componente..." aria-label="Buscar projetos">
+                    </div>
                 </div>
 
                 <div class="projects-grid" id="projects-grid">
