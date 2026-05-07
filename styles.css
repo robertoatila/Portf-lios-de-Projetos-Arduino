@@ -21,7 +21,7 @@
   --color-accent-secondary: var(--neon-purple);
 
   --text-main: #f8f9fa;
-  --text-muted: #94a3b8;
+  --text-muted: #cbd5e1;
   
   /* Fonts */
   --font-display: 'Chakra Petch', sans-serif;
@@ -596,10 +596,12 @@ a:hover {
 .what-facts {
   list-style: none;
   margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .what-facts li {
-  margin-bottom: 0.5rem;
   position: relative;
   padding-left: 1.5rem;
 }

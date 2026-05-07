@@ -127,12 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Adicionar linhas dependendo do progresso
                 const targetMsgIndex = Math.floor((progress / 100) * messages.length);
+                const frag = document.createDocumentFragment();
                 while (msgIndex < targetMsgIndex && msgIndex < messages.length) {
                     const p = document.createElement('div');
                     p.textContent = `> ${messages[msgIndex]}`;
-                    bootLines.appendChild(p);
+                    frag.appendChild(p);
                     msgIndex++;
                 }
+                if (frag.childNodes.length > 0) bootLines.appendChild(frag);
                 
                 if (progress === 100) {
                     sessionStorage.setItem('booted', 'true');
@@ -305,7 +307,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const heroVisual = document.getElementById('hero-visual-wrapper') || document.getElementById('hero-visual');
         const tiltCards = document.querySelectorAll('.future-card');
         
+        let heroVisible = true;
+        const heroSection = document.querySelector('.hero');
+        if (heroSection) {
+            const observer = new IntersectionObserver((entries) => {
+                heroVisible = entries[0].isIntersecting;
+            });
+            observer.observe(heroSection);
+        }
+
         window.addEventListener('mousemove', (e) => {
+            if (!heroVisible) return;
+            
             // Hero Parallax
             const x = (e.clientX / window.innerWidth - 0.5) * 20;
             const y = (e.clientY / window.innerHeight - 0.5) * 20;
@@ -412,6 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             particles.push(new Particle());
         }
         
+        let animationId;
         const animate = () => {
             ctx.clearRect(0, 0, width, height);
             for (let i = 0; i < particles.length; i++) {
@@ -432,9 +446,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            requestAnimationFrame(animate);
+            animationId = requestAnimationFrame(animate);
         };
-        animate();
+        
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                if (!animationId) animate();
+            } else {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+        });
+        observer.observe(canvas.parentElement);
     };
 
     // 7. CANVAS: DIGITAL RAIN
@@ -724,16 +749,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Focus Trap Logic
             if (e.key === 'Tab') {
                 const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusableElements.length === 0) return;
+                
                 const firstElement = focusableElements[0];
                 const lastElement = focusableElements[focusableElements.length - 1];
                 
                 if (e.shiftKey) {
-                    if (document.activeElement === firstElement) {
+                    if (document.activeElement === firstElement || !modal.contains(document.activeElement)) {
                         lastElement.focus();
                         e.preventDefault();
                     }
                 } else {
-                    if (document.activeElement === lastElement) {
+                    if (document.activeElement === lastElement || !modal.contains(document.activeElement)) {
                         firstElement.focus();
                         e.preventDefault();
                     }
