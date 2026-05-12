@@ -76,42 +76,42 @@
     background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
   }
   
-  /* Substituir o cursor antigo pelas novas classes */
-  .custom-cursor-dot {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 8px;
-    height: 8px;
-    background-color: var(--neon-cyan);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: var(--z-cursor);
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px var(--neon-cyan);
-  }
+  
+  .custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(0, 243, 255, 0.2);
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 15px var(--neon-cyan), inset 0 0 10px var(--neon-cyan);
+  pointer-events: none;
+  z-index: var(--z-cursor);
+  mix-blend-mode: screen; /* Efeito de luz sobreposta */
+  backdrop-filter: blur(2px);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              height 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
 
-  .custom-cursor-ring {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 32px;
-    height: 32px;
-    border: 2px solid rgba(0, 243, 255, 0.5);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: calc(var(--z-cursor) - 1);
-    transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
-  }
+.custom-cursor.hovering {
+  width: 65px;
+  height: 65px;
+  background-color: rgba(188, 19, 254, 0.15);
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 25px var(--neon-purple), inset 0 0 15px var(--neon-purple);
+}
 
-  .custom-cursor-ring.hovering {
-    width: 60px;
-    height: 60px;
-    background-color: rgba(188, 19, 254, 0.1);
-    border-color: var(--neon-purple);
-    box-shadow: 0 0 15px rgba(188, 19, 254, 0.3);
-  }
+.custom-cursor.clicking {
+  width: 12px;
+  height: 12px;
+  background-color: var(--neon-cyan);
+  box-shadow: 0 0 30px var(--neon-cyan);
+}
+
 }
 
 @layer components {
