@@ -43,10 +43,6 @@
 </head>
 
 <body>
-    <!-- Background Depth -->
-    <div class="bg-aurora" aria-hidden="true"></div>
-    <div class="bg-scanlines" aria-hidden="true"></div>
-    <div class="bg-noise" aria-hidden="true"></div>
     <!-- Boot Screen -->
     <div class="boot-screen" id="boot-screen" aria-hidden="true" role="status">
         <svg class="boot-logo" viewBox="-10 0 120 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -66,7 +62,7 @@
     <canvas id="constellation-bg" aria-hidden="true"></canvas>
 
     <!-- Scroll Progress Bar -->
-    <div id="read-progress" aria-hidden="true"></div>
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
 
     <nav class="site-nav" id="site-nav" aria-label="Navegação principal do portfólio">
         <div class="container nav-container">
@@ -1088,8 +1084,6 @@
     <!-- Custom Cursor -->
     <div class="custom-cursor" id="cursor" aria-hidden="true"></div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toast-container" aria-live="polite"></div>
     <script src="data.js" defer></script>
     <script src="script.js" defer></script>
 </body>

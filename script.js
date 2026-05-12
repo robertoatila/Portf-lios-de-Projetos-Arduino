@@ -1,126 +1,62 @@
-
-// Forçar rolagem pro topo no F5 (reload)
-if (history.scrollRestoration) {
-    history.scrollRestoration = 'manual';
-}
-window.scrollTo(0, 0);
-
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
+
+    // Forçar rolagem pro topo no F5 (reload)
+    if (history.scrollRestoration) {
+        history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
 
     // Utilitários de Performance e Acessibilidade
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // --- NOVO: Módulo Utils ---
-    const Utils = {
-        debounce: (func, wait) => {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        },
-        throttle: (func, limit) => {
-            let lastFunc;
-            let lastRan;
-            return function(...args) {
-                const context = this;
-                if (!lastRan) {
-                    func.apply(context, args);
-                    lastRan = Date.now();
-                } else {
-                    clearTimeout(lastFunc);
-                    lastFunc = setTimeout(function() {
-                        if ((Date.now() - lastRan) >= limit) {
-                            func.apply(context, args);
-                            lastRan = Date.now();
-                        }
-                    }, Math.max(limit - (Date.now() - lastRan), 0));
-                }
-            };
-        },
-        lerp: (start, end, amt) => (1 - amt) * start + amt * end,
-        escapeHtml: (str) => {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        },
-        highlightSyntax: (code) => {
-            if (!code) return '';
-            let htmlEscaped = Utils.escapeHtml(code);
-            const strings = [];
-            htmlEscaped = htmlEscaped.replace(/(".*?")/g, (match) => {
-                strings.push(match);
-                return `__STR_${strings.length - 1}__`;
-            });
-            const comments = [];
-            htmlEscaped = htmlEscaped.replace(/(\/\/.*)/g, (match) => {
-                comments.push(match);
-                return `__COM_${comments.length - 1}__`;
-            });
-            htmlEscaped = htmlEscaped
-                .replace(/\b(int|void|const|char|float|bool|long|String)\b/g, '<span class="token-keyword">$1</span>')
-                .replace(/\b(HIGH|LOW|OUTPUT|INPUT|INPUT_PULLUP|true|false)\b/g, '<span class="token-keyword">$1</span>')
-                .replace(/\b(digitalWrite|digitalRead|pinMode|delay|setup|loop|analogRead|analogWrite|Serial|begin|print|println|tone|noTone|pulseIn)\b/g, '<span class="token-function">$1</span>')
-                .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
-                
-            htmlEscaped = htmlEscaped.replace(/__COM_(\d+)__/g, (match, p1) => {
-                return `<span class="token-comment">${comments[p1]}</span>`;
-            });
-            htmlEscaped = htmlEscaped.replace(/__STR_(\d+)__/g, (match, p1) => {
-                return `<span style="color: #ce9178;">${strings[p1]}</span>`;
-            });
-            const lines = htmlEscaped.split('\n');
-            return lines.map(line => `<span class="code-line">${line || ' '}</span>`).join('\n');
-        }
+    // Debounce Helper
+    const debounce = (func, wait) => {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
     };
 
-    // --- NOVO: ToastManager ---
-    class ToastManager {
-        constructor() {
-            this.container = document.getElementById('toast-container');
-        }
-        show(message, type = 'success', duration = 3000) {
-            if (!this.container) return;
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            this.container.appendChild(toast);
-            
-            // Forçar reflow para animação
-            void toast.offsetWidth;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-                toast.addEventListener('transitionend', () => toast.remove());
-            }, duration);
-        }
-    }
-    window.toastManager = new ToastManager();
-    window.showToast = window.toastManager.show.bind(window.toastManager);
-
-    // --- NOVO: Konami Code (Turbo Mode) ---
-    const initKonami = () => {
-        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-        let konamiIndex = 0;
+    // Syntax Highlight C++
+    const highlightSyntax = (code) => {
+        if (!code) return '';
         
-        window.addEventListener('keydown', (e) => {
-            if (e.key === konamiCode[konamiIndex]) {
-                konamiIndex++;
-                if (konamiIndex === konamiCode.length) {
-                    window.showToast("TURBO MODE ATIVADO!", "success", 5000);
-                    document.body.classList.add('turbo-mode');
-                    setTimeout(() => document.body.classList.remove('turbo-mode'), 5000);
-                    konamiIndex = 0;
-                }
-            } else {
-                konamiIndex = 0;
-            }
+        let htmlEscaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        const strings = [];
+        htmlEscaped = htmlEscaped.replace(/(".*?")/g, (match) => {
+            strings.push(match);
+            return `__STR_${strings.length - 1}__`;
         });
+        
+        const comments = [];
+        htmlEscaped = htmlEscaped.replace(/(\/\/.*)/g, (match) => {
+            comments.push(match);
+            return `__COM_${comments.length - 1}__`;
+        });
+        
+        htmlEscaped = htmlEscaped
+            .replace(/\b(int|void|const|char|float|bool|long|String)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/\b(HIGH|LOW|OUTPUT|INPUT|INPUT_PULLUP|true|false)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/\b(digitalWrite|digitalRead|pinMode|delay|setup|loop|analogRead|analogWrite|Serial|begin|print|println|tone|noTone|pulseIn)\b/g, '<span class="token-function">$1</span>')
+            .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
+            
+        htmlEscaped = htmlEscaped.replace(/__COM_(\d+)__/g, (match, p1) => {
+            return `<span class="token-comment">${comments[p1]}</span>`;
+        });
+        
+        htmlEscaped = htmlEscaped.replace(/__STR_(\d+)__/g, (match, p1) => {
+            return `<span style="color: #ce9178;">${strings[p1]}</span>`;
+        });
+            
+        // Separar em linhas
+        const lines = htmlEscaped.split('\n');
+        return lines.map(line => `<span class="code-line">${line || ' '}</span>`).join('\n');
     };
-    initKonami();
 
-
-// 1. BOOT SCREEN & TYPEWRITER
+    // 1. BOOT SCREEN & TYPEWRITER
     const initBootAndTypewriter = () => {
         const bootScreen = document.getElementById('boot-screen');
         const bootLines = document.getElementById('boot-lines');
@@ -271,10 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const menuBtn = document.getElementById('nav-menu-btn');
         const navLinks = document.getElementById('nav-links');
         const links = document.querySelectorAll('.nav-link');
-        const progress = document.getElementById('read-progress');
+        const progress = document.getElementById('scroll-progress');
         const backToTop = document.getElementById('back-to-top');
         
-        window.addEventListener('scroll', Utils.throttle(() => {
+        window.addEventListener('scroll', () => {
             const scrollY = window.scrollY;
             
             // Navbar Glassmorphism
@@ -296,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (scrollY > 500) backToTop.classList.add('visible');
                 else backToTop.classList.remove('visible');
             }
-        }, 50), { passive: true });
+        }, { passive: true });
         
         // Mobile Menu
         if (menuBtn && navLinks) {
@@ -431,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
         };
-        window.addEventListener('resize', Utils.debounce(resize, 200));
+        window.addEventListener('resize', debounce(resize, 200));
         resize();
         
         window.addEventListener('mousemove', (e) => {
@@ -538,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
             width = canvas.width = parent.offsetWidth;
             height = canvas.height = parent.offsetHeight;
         };
-        window.addEventListener('resize', Utils.debounce(resize, 200));
+        window.addEventListener('resize', debounce(resize, 200));
         resize();
         
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789アァカサタナハマヤャラワガザダバパイィキシチニヒミリヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレゲゼデベペオォコソトノホモヨョロゴゾドボポヴッン'.split('');
@@ -605,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const projPiscante = window.projects.find(p => p.id === "piscante" || p.id === 1);
             if (projPiscante) {
                 currentSimCode = projPiscante.code;
-                codeDisplay.innerHTML = Utils.highlightSyntax(currentSimCode);
+                codeDisplay.innerHTML = highlightSyntax(currentSimCode);
             }
         }
         
@@ -782,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (searchInput) {
-                searchInput.addEventListener('input', Utils.debounce((e) => {
+                searchInput.addEventListener('input', debounce((e) => {
                     searchQuery = e.target.value.toLowerCase().trim();
                     renderProjects();
                 }, 300));
@@ -812,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const codeEl = document.getElementById('modal-code');
             if (codeEl) {
-                codeEl.innerHTML = Utils.highlightSyntax(proj.code);
+                codeEl.innerHTML = highlightSyntax(proj.code);
             }
             
             modal.classList.add('active');
