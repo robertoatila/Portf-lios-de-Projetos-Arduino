@@ -40,6 +40,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 
 <body>
@@ -57,6 +58,9 @@
         <div id="boot-bar"></div>
         <span id="boot-pct">0%</span>
     </div>
+
+    <!-- Aurora Background -->
+    <div class="bg-aurora" aria-hidden="true"></div>
 
     <!-- Fundo interativo: Constelação Tech -->
     <canvas id="constellation-bg" aria-hidden="true"></canvas>
@@ -94,6 +98,7 @@
                 <li><a href="#simulacao" class="nav-link">Simulação</a></li>
                 <li><a href="#componentes" class="nav-link">Componentes</a></li>
                 <li><a href="#futuro" class="nav-link">Futuro</a></li>
+                <li><a href="#roadmap" class="nav-link">Roadmap</a></li>
                 <li><a href="#meus-projetos" class="nav-link nav-link--cta">Projetos</a></li>
                 <li><a href="#sobre" class="nav-link">Sobre</a></li>
             </ul>
@@ -918,9 +923,82 @@
                 
                 <circle cx="150" cy="20" r="3" class="circuit-node" />
                 <circle cx="350" cy="5" r="3" class="circuit-node" />
-                <circle cx="550" cy="20" r="3" class="circuit-node" />
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none" stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none" stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                <circle cx="150" cy="20" r="3" class="circuit-node" />
                 <circle cx="750" cy="35" r="3" class="circuit-node" />
             </svg>
+        </div>
+
+        <!-- SEÇÃO: IoT -->
+        <section id="iot" aria-labelledby="iot-heading">
+            <div class="container">
+                <div class="iot-grid">
+                    <div>
+                        <div data-reveal="left" style="--reveal-delay: 0ms">
+                            <span class="section-tag">// conectividade</span>
+                            <h2 id="iot-heading">Do pino ao <span class="highlight">Dashboard</span></h2>
+                            <p>O Arduino vai além dos circuitos locais. Com módulos Wi-Fi e plataformas cloud, seus projetos ganham monitoramento e controle remoto em tempo real.</p>
+                        </div>
+                        <div class="pill-grid" data-reveal="left" style="--reveal-delay: 100ms">
+                            <span class="pill">ESP32 Wi-Fi/BLE</span>
+                            <span class="pill">MQTT</span>
+                            <span class="pill">Arduino Cloud</span>
+                            <span class="pill">Home Assistant</span>
+                            <span class="pill">Node-RED</span>
+                            <span class="pill">ThingSpeak</span>
+                        </div>
+                    </div>
+                    <div class="iot-panel" data-reveal="right" style="--reveal-delay: 200ms">
+                        <div class="iot-card">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <h3>Telemetria</h3>
+                            <p>Monitore sensores remotamente via dashboards e gráficos em tempo real.</p>
+                        </div>
+                        <div class="iot-card">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                            <h3>Comando Remoto</h3>
+                            <p>Controle atuadores pelo celular via MQTT ou Arduino Cloud.</p>
+                        </div>
+                        <div class="iot-card">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <h3>Resiliência</h3>
+                            <p>Watchdog timer e reconexão automática para operação contínua 24/7.</p>
+                        </div>
+                        <div class="iot-card">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <h3>Segurança</h3>
+                            <p>Autenticação TLS e tokens JWT para comunicação segura.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Divisor -->
+        <div class="circuit-divider v3" aria-hidden="true" data-reveal="scale" style="--reveal-delay: 0ms">
+            <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
+                <path d="M0,20 H 150 L 170,5 H 350 L 370,20 H 550 L 570,35 H 750 L 770,20 H 1200" fill="none" stroke="currentColor" stroke-width="1.5" class="circuit-path" />
+                <path d="M0,30 H 140 L 165,15 H 340 L 380,30 H 540 L 580,15 H 740 L 760,30 H 1200" fill="none" stroke="currentColor" stroke-width="0.5" class="circuit-path" opacity="0.5" />
+                <circle cx="350" cy="5" r="3" class="circuit-node" />
+                <circle cx="750" cy="35" r="3" class="circuit-node" />
+            </svg>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar" data-reveal="scale" style="--reveal-delay: 0ms">
+            <div class="stat" data-target="9">
+                <span class="stat-num" id="stat-projetos">0</span>
+                <span class="stat-label">Projetos</span>
+            </div>
+            <div class="stat" data-target="3">
+                <span class="stat-num" id="stat-niveis">0</span>
+                <span class="stat-label">Níveis</span>
+            </div>
+            <div class="stat" data-target="6">
+                <span class="stat-num" id="stat-componentes">0</span>
+                <span class="stat-label">Componentes Únicos</span>
+            </div>
         </div>
 
         <!-- SEÇÃO 8 — Meus Projetos -->

@@ -2045,3 +2045,576 @@ input[type=range]::-webkit-slider-runnable-track {
     padding: 0.5rem;
   }
 }
+
+/* ==========================================================================
+   25. AURORA BACKGROUND
+   ========================================================================== */
+.bg-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(0,243,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 70% 30%, rgba(188,19,254,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 80%, rgba(79,142,247,0.05) 0%, transparent 50%);
+  animation: aurora-shift 18s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-shift {
+  0%   { background-position: 0% 0%, 100% 0%, 50% 100%; filter: hue-rotate(0deg); }
+  50%  { background-position: 30% 20%, 70% 50%, 40% 60%; filter: hue-rotate(15deg); }
+  100% { background-position: 60% 40%, 40% 70%, 60% 30%; filter: hue-rotate(-10deg); }
+}
+
+/* Scanlines */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.012) 2px,
+    rgba(255,255,255,0.012) 3px
+  );
+  opacity: 0.025;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-aurora { animation: none; }
+}
+
+/* ==========================================================================
+   26. GLITCH TITLE
+   ========================================================================== */
+.hero-title.glitch {
+  position: relative;
+}
+
+.hero-title.glitch::before,
+.hero-title.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-title.glitch::before {
+  color: var(--neon-cyan);
+  animation: glitch-before 0.16s steps(2, end) infinite;
+  clip-path: inset(0 0 65% 0);
+}
+
+.hero-title.glitch::after {
+  color: var(--neon-purple);
+  animation: glitch-after 0.16s steps(2, end) infinite;
+  clip-path: inset(60% 0 0 0);
+}
+
+@keyframes glitch-before {
+  0%   { transform: translateX(-2px); }
+  25%  { transform: translateX(2px); }
+  50%  { transform: translateX(-1px); }
+  75%  { transform: translateX(3px); }
+  100% { transform: translateX(-2px); }
+}
+
+@keyframes glitch-after {
+  0%   { transform: translateX(2px); }
+  25%  { transform: translateX(-3px); }
+  50%  { transform: translateX(1px); }
+  75%  { transform: translateX(-2px); }
+  100% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-title.glitch::before,
+  .hero-title.glitch::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   27. STATS BAR
+   ========================================================================== */
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  padding: 3rem 2rem;
+  margin: 0 auto;
+  max-width: 700px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 20px rgba(0,243,255,0.4);
+  line-height: 1;
+}
+
+.stat-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+  .stats-bar { gap: 2rem; flex-wrap: wrap; }
+}
+
+/* ==========================================================================
+   28. ROADMAP
+   ========================================================================== */
+.roadmap-shell {
+  position: relative;
+  padding: 40px 0;
+}
+
+.roadmap-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  top: 0;
+  background: rgba(0,243,255,0.1);
+}
+
+.roadmap-line-fill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: var(--roadmap-progress, 0%);
+  top: 0;
+  background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-purple));
+  transition: height 0.8s ease;
+}
+
+.roadmap-step {
+  display: flex;
+  align-items: flex-start;
+  max-width: 480px;
+  margin: 0 auto 48px;
+  gap: 20px;
+  position: relative;
+}
+
+.roadmap-step:nth-child(odd) {
+  flex-direction: row;
+  margin-right: auto;
+  margin-left: calc(50% + 30px);
+}
+
+.roadmap-step:nth-child(even) {
+  flex-direction: row-reverse;
+  margin-left: auto;
+  margin-right: calc(50% + 30px);
+  text-align: right;
+}
+
+.roadmap-head {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: inherit;
+  padding: 0;
+  font-family: inherit;
+}
+
+.roadmap-step:nth-child(even) .roadmap-head {
+  flex-direction: row-reverse;
+}
+
+.roadmap-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--neon-cyan);
+  background: var(--neon-cyan-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--neon-cyan);
+  transition: all var(--t-base);
+}
+
+.roadmap-step.open .roadmap-icon {
+  background: var(--neon-cyan);
+  color: var(--bg-deep);
+  box-shadow: var(--shadow-neon-cyan);
+}
+
+.roadmap-head-text h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.roadmap-head-text p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.roadmap-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  margin-top: 0;
+}
+
+.roadmap-step.open .roadmap-details {
+  max-height: 400px;
+  margin-top: 12px;
+}
+
+.roadmap-details ul {
+  list-style: none;
+  padding: 0 0 0 64px;
+}
+
+.roadmap-step:nth-child(even) .roadmap-details ul {
+  padding: 0 64px 0 0;
+}
+
+.roadmap-details li {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 3px 0;
+  position: relative;
+}
+
+.roadmap-details li::before {
+  content: "> ";
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 768px) {
+  .roadmap-line, .roadmap-line-fill { display: none; }
+  .roadmap-step,
+  .roadmap-step:nth-child(odd),
+  .roadmap-step:nth-child(even) {
+    margin-left: 0;
+    margin-right: 0;
+    flex-direction: row;
+    text-align: left;
+    max-width: 100%;
+  }
+  .roadmap-step:nth-child(even) .roadmap-head { flex-direction: row; }
+  .roadmap-step:nth-child(even) .roadmap-details ul { padding: 0 0 0 64px; }
+}
+
+/* ==========================================================================
+   29. COMPARATIVO DE PLACAS
+   ========================================================================== */
+.compare-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(0,243,255,0.1);
+  margin-top: 2rem;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.compare-table thead th {
+  background: rgba(0,243,255,0.05);
+  padding: 12px 16px;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(0,243,255,0.1);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.compare-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+
+.compare-table tbody tr:hover td {
+  background: rgba(0,243,255,0.03);
+}
+
+.compare-table tr[hidden] { display: none; }
+.compare-table tr.visible-row { display: table-row; }
+
+.cell-best {
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.badge-board {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.badge-board.iniciante { background: rgba(0,243,255,0.1); color: var(--neon-cyan); }
+.badge-board.intermediario { background: rgba(188,19,254,0.1); color: var(--neon-purple); }
+.badge-board.avancado { background: rgba(245,158,11,0.1); color: #f59e0b; }
+
+.btn-toggle-rows {
+  margin-top: 1rem;
+  background: transparent;
+  border: 1px solid rgba(0,243,255,0.25);
+  color: var(--neon-cyan);
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  transition: all var(--t-base);
+}
+
+.btn-toggle-rows:hover {
+  background: var(--neon-cyan-dim);
+}
+
+/* ==========================================================================
+   30. IoT SECTION
+   ========================================================================== */
+.iot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--neon-cyan-dim);
+  border: 1px solid rgba(0,243,255,0.2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+}
+
+.iot-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.iot-card {
+  background: var(--bg-surface);
+  border: 1px solid rgba(0,243,255,0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: border-color 0.3s;
+}
+
+.iot-card:hover {
+  border-color: var(--neon-cyan);
+}
+
+.iot-card svg {
+  color: var(--neon-cyan);
+  stroke: var(--neon-cyan);
+  margin-bottom: 12px;
+}
+
+.iot-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.iot-card p {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .iot-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .iot-panel { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   31. SCHEMATIC MODAL
+   ========================================================================== */
+.schematic-section {
+  margin-top: 1.5rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.schematic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.schematic-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.schematic-copy {
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 1px solid rgba(0,243,255,0.2);
+  background: transparent;
+  color: var(--neon-cyan);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: all var(--t-base);
+}
+
+.schematic-copy:hover {
+  background: var(--neon-cyan-dim);
+}
+
+.schematic-art {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--neon-cyan);
+  background: #020408;
+  border: 1px solid rgba(0,243,255,0.15);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
+  margin: 8px 0;
+}
+
+.wiring-list {
+  list-style: none;
+  padding: 0;
+}
+
+.wiring-list li {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+.wiring-list li::before {
+  content: "→ ";
+  color: var(--neon-cyan);
+}
+
+.btn-schematic {
+  background: transparent;
+  border: 1px solid rgba(0,243,255,0.25);
+  color: var(--neon-cyan);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-body);
+  transition: all var(--t-base);
+  margin: 12px 1.5rem 1.5rem;
+  display: inline-block;
+}
+
+.btn-schematic:hover {
+  background: var(--neon-cyan-dim);
+}
+
+/* ==========================================================================
+   32. TOAST NOTIFICATIONS
+   ========================================================================== */
+.toast-region {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+}
+
+.toast {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #fff;
+  backdrop-filter: blur(10px);
+  animation: toast-in 0.3s ease forwards;
+  max-width: 340px;
+}
+
+.toast-success {
+  background: rgba(0,243,255,0.15);
+  border: 1px solid rgba(0,243,255,0.3);
+  color: var(--neon-cyan);
+}
+
+.toast-error {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+}
+
+.toast-info {
+  background: rgba(188,19,254,0.15);
+  border: 1px solid rgba(188,19,254,0.3);
+  color: var(--neon-purple);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.toast-out {
+  animation: toast-out 0.3s ease forwards;
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(20px); }
+}

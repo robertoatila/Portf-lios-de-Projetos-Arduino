@@ -47,7 +47,23 @@ void loop() {
   digitalWrite(led3, LOW);
   digitalWrite(led4, HIGH);
   delay(500);  
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD
+  ───────────        ──────────
+  Pin A1 ──[220Ω]──▶|── GND
+  Pin A2 ──[220Ω]──▶|── GND
+  Pin A3 ──[220Ω]──▶|── GND
+  Pin A4 ──[220Ω]──▶|── GND
+  GND ─────────────────── GND
+
+  ▶| = LED (anodo → catodo)
+`,
+        wiring: [
+            "Conecte o anodo (+) de cada LED a A1, A2, A3, A4 via resistor 220Ω",
+            "Conecte o catodo (-) de cada LED ao GND da protoboard",
+            "Ligue o GND do Arduino à linha negativa da protoboard"
+        ]
     },
     {
         id: "for",
@@ -77,7 +93,25 @@ void loop() {
     }
     delay(500);  
   }
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD
+  ───────────        ──────────
+  Pin A1 ──[220Ω]──▶|── GND
+  Pin A2 ──[220Ω]──▶|── GND
+  Pin A3 ──[220Ω]──▶|── GND
+  Pin A4 ──[220Ω]──▶|── GND
+  GND ─────────────────── GND
+
+  ▶| = LED (anodo → catodo)
+  Arrays: led[] = {A1, A2, A3, A4}
+`,
+        wiring: [
+            "Conecte o anodo (+) de cada LED a A1, A2, A3, A4 via resistor 220Ω",
+            "Conecte o catodo (-) de cada LED ao GND da protoboard",
+            "Ligue o GND do Arduino à linha negativa da protoboard",
+            "Mesma montagem do PISCANTE — a diferença está no código (uso de for)"
+        ]
     },
     {
         id: "semaforo",
@@ -127,7 +161,25 @@ void loop() {
   digitalWrite(led3, LOW);
   digitalWrite(led4, HIGH);
   delay(2000);  
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD (SEMÁFORO)
+  ───────────        ─────────────────────
+  Pin A1 ──[220Ω]──▶|── GND   (Vermelho)
+  Pin A2 ──[220Ω]──▶|── GND   (Amarelo)
+  Pin A3 ──[220Ω]──▶|── GND   (Verde)
+  Pin A4 ──[220Ω]──▶|── GND   (Pedestre)
+  GND ─────────────────── GND
+
+  Sequência: Verm → Verm+Am → Verm+Vrd → Verm+Ped
+`,
+        wiring: [
+            "Conecte LED vermelho ao pino A1 via resistor 220Ω",
+            "Conecte LED amarelo ao pino A2 via resistor 220Ω",
+            "Conecte LED verde ao pino A3 via resistor 220Ω",
+            "Conecte LED pedestre ao pino A4 via resistor 220Ω",
+            "Todos os catodos (-) ao GND da protoboard"
+        ]
     },
     {
         id: "mario",
@@ -349,7 +401,27 @@ void loop() {
   }
 
   delay(3000); // Pausa antes de repetir
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD
+  ───────────        ──────────
+  Pin D3 ──────────── Buzzer+ ── GND
+  Pin A1 ──[220Ω]──▶|── GND   (LED 1)
+  Pin A2 ──[220Ω]──▶|── GND   (LED 2)
+  Pin A3 ──[220Ω]──▶|── GND   (LED 3)
+  Pin A4 ──[220Ω]──▶|── GND   (LED 4)
+  GND ─────────────────── GND
+
+  ♪ tone(buzzer, freq, dur) → Super Mario Theme
+  LEDs sincronizam com a faixa de frequência
+`,
+        wiring: [
+            "Conecte o pino positivo do buzzer ao pino digital 3",
+            "Conecte o pino negativo do buzzer ao GND",
+            "Conecte LEDs aos pinos A1–A4 via resistores 220Ω",
+            "Catodos dos LEDs ao GND da protoboard",
+            "GND do Arduino à linha negativa da protoboard"
+        ]
     },
     {
         id: "marcha_imperial",
@@ -479,7 +551,27 @@ void loop() {
   }
 
   delay(3000); // Pausa de 3 segundos antes de repetir a marcha
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD
+  ───────────        ──────────
+  Pin D3 ──────────── Buzzer+ ── GND
+  Pin A1 ──[220Ω]──▶|── GND   (LED 1)
+  Pin A2 ──[220Ω]──▶|── GND   (LED 2)
+  Pin A3 ──[220Ω]──▶|── GND   (LED 3)
+  Pin A4 ──[220Ω]──▶|── GND   (LED 4)
+  GND ─────────────────── GND
+
+  ♪ Marcha Imperial — Star Wars
+  LEDs = "sabres de luz" sincronizados
+`,
+        wiring: [
+            "Conecte o pino positivo do buzzer ao pino digital 3",
+            "Conecte o pino negativo do buzzer ao GND",
+            "Conecte LEDs aos pinos A1–A4 via resistores 220Ω",
+            "Catodos dos LEDs ao GND da protoboard",
+            "Mesma montagem do MARIO — muda apenas a melodia"
+        ]
     },
     {
         id: "got",
@@ -619,7 +711,27 @@ void loop() {
   }
 
   delay(4000); // Pausa de 4 segundos para manter o clima épico antes do loop recomeçar
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD
+  ───────────        ──────────
+  Pin D3 ──────────── Buzzer+ ── GND
+  Pin A1 ──[220Ω]──▶|── GND   (LED 1)
+  Pin A2 ──[220Ω]──▶|── GND   (LED 2)
+  Pin A3 ──[220Ω]──▶|── GND   (LED 3)
+  Pin A4 ──[220Ω]──▶|── GND   (LED 4)
+  GND ─────────────────── GND
+
+  ♪ Game of Thrones — notas graves
+  LEDs com efeito dramático (fogueira)
+`,
+        wiring: [
+            "Conecte o pino positivo do buzzer ao pino digital 3",
+            "Conecte o pino negativo do buzzer ao GND",
+            "Conecte LEDs aos pinos A1–A4 via resistores 220Ω",
+            "Catodos dos LEDs ao GND da protoboard",
+            "Mesma montagem do MARIO — muda a melodia e o tempo"
+        ]
     },
     {
         id: "apac",
@@ -669,7 +781,24 @@ void loop() {
   digitalWrite(led3, LOW);
   digitalWrite(led4, HIGH);
   delay(2000);  
-}`
+}`,
+        schematic: `
+  ARDUINO UNO        PROTOBOARD
+  ───────────        ──────────
+  Pin A1 ──[220Ω]──▶|── GND
+  Pin A2 ──[220Ω]──▶|── GND
+  Pin A3 ──[220Ω]──▶|── GND
+  Pin A4 ──[220Ω]──▶|── GND
+  GND ─────────────────── GND
+
+  Sequência: LED1 → LED2 → LED3 → LED4 (2s cada)
+`,
+        wiring: [
+            "Conecte LEDs aos pinos A1–A4 via resistores 220Ω",
+            "Catodos dos LEDs ao GND da protoboard",
+            "GND do Arduino à linha negativa da protoboard",
+            "Cada LED acende individualmente por 2 segundos"
+        ]
     },
     {
         id: "carrinho",
@@ -722,7 +851,28 @@ void loop()
     digitalWrite(13,HIGH);
   }
   delay(100);
-}`
+}`,
+        schematic: `
+  ARDUINO UNO          PONTE H L298N          MOTORES
+  ───────────          ───────────          ───────
+  Pin 10 (IN1) ────── IN1 ──── OUT1 ─── Motor Dir +
+  Pin 11 (IN2) ────── IN2 ──── OUT2 ─── Motor Dir -
+  Pin 12 (IN3) ────── IN3 ──── OUT3 ─── Motor Esq +
+  Pin 13 (IN4) ────── IN4 ──── OUT4 ─── Motor Esq -
+  Pin D2 ──────────── Sensor IR Direito
+  Pin D3 ──────────── Sensor IR Esquerdo
+  GND ─────────────── GND L298N + Sensores
+  VIN/5V ──────────── VCC Sensores IR
+  Bateria 7–12V ───── 12V L298N
+`,
+        wiring: [
+            "Conecte IN1/IN2/IN3/IN4 do L298N aos pinos 10, 11, 12, 13",
+            "Conecte OUT1/OUT2 ao motor direito, OUT3/OUT4 ao motor esquerdo",
+            "Sensor IR direito no pino D2, sensor IR esquerdo no pino D3",
+            "Alimente o L298N com bateria 7–12V (pinos 12V e GND)",
+            "Conecte GND do Arduino ao GND do L298N e sensores",
+            "VCC dos sensores IR ao 5V do Arduino"
+        ]
     },
     {
         id: "cozinha_inteligente",
@@ -799,7 +949,31 @@ void loop()
   } else {
     digitalWrite(4, LOW);
   }
-}`
+}`,
+        schematic: `
+  ARDUINO UNO           SENSORES & ATUADORES
+  ───────────           ────────────────────
+  Pin D3 (TRIG/ECHO) ── HC-SR04 Ultrassônico
+  Pin D10 ──────────── Sensor PIR (movimento)
+  Pin A0 ───────────── Sensor de Gás MQ-2
+  Pin A1 ───────────── Sensor de Temperatura
+  Pin D5 ───────────── Servo Motor (armário)
+  Pin D9 ──[220Ω]──▶|── LED 1 (presença)
+  Pin D7 ──[220Ω]──▶|── LED 2 (presença)
+  Pin D6 ───────────── Buzzer (alarme temp)
+  Pin D4 ───────────── Buzzer (alarme gás)
+  GND ──────────────── GND de todos
+  5V ───────────────── VCC sensores
+`,
+        wiring: [
+            "HC-SR04: TRIG e ECHO no pino D3, VCC=5V, GND=GND",
+            "PIR: sinal no pino D10, VCC=5V, GND=GND",
+            "MQ-2: saída analógica no pino A0, VCC=5V, GND=GND",
+            "Sensor de temperatura: saída analógica no pino A1",
+            "Servo: sinal no pino D5 (via Servo.h), VCC=5V, GND=GND",
+            "LEDs nos pinos D9 e D7 com resistores 220Ω",
+            "Buzzers nos pinos D6 (temperatura) e D4 (gás)"
+        ]
     }
 ];
 
